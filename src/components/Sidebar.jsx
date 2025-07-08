@@ -35,9 +35,9 @@ const Sidebar = () => {
 
   return (
     <aside
-      className={`relative bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ease-in-out ${
+      className={`fixed inset-y-0 left-0 z-30 bg-white border-r border-gray-200 flex-col transition-transform duration-300 ease-in-out lg:flex lg:relative lg:inset-y-auto lg:left-auto lg:z-auto lg:translate-x-0 ${
         isCollapsed ? 'w-20' : 'w-64'
-      } ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+      } ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
     >
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {!isCollapsed && (

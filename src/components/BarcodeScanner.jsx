@@ -1,52 +1,56 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
+import toast from 'react-hot-toast';
 
-class BarcodeScanner extends React.Component {
-  constructor(props) {
-    super(props);
-    this.html5QrCode = null;
-  }
+const BarcodeScanner = ({ onScan, onClose }) => {
+  const readerRef = useRef(null);
+  const qrCodeScannerRef = useRef(null);
 
-  componentDidMount() {
-    this.html5QrCode = new Html5Qrcode('reader');
+  useEffect(() => {
+    if (!readerRef.current) return;
+
+    const qrCodeScanner = new Html5Qrcode(readerRef.current.id);
+    qrCodeScannerRef.current = qrCodeScanner;
+
     const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-      this.props.onScan(decodedText);
-      this.html5QrCode.stop().catch(err => console.error("Failed to stop the scanner.", err));
+      onScan(decodedText);
+      onClose();
     };
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
 
     Html5Qrcode.getCameras()
-      .then(cameras => {
+      .then((cameras) => {
         if (cameras && cameras.length) {
-          const cameraId = cameras[0].id;
-          this.html5QrCode.start(
-            cameraId,
+          qrCodeScanner.start(
+            { facingMode: 'environment' },
             config,
-            qrCodeSuccessCallback,
-            (errorMessage) => {
-              // console.error(errorMessage);
-            }
-          ).catch(err => {
-            console.error("Unable to start scanning.", err);
+            qrCodeSuccessCallback
+          ).catch((err) => {
+            console.error('Error starting scanner:', err);
+            toast.error('Failed to start scanner. Please grant camera permissions.');
+            onClose();
           });
+        } else {
+          toast.error('No cameras found.');
+          onClose();
         }
       })
-      .catch(err => {
-        console.error("Error getting cameras.", err);
+      .catch((err) => {
+        console.error('Error getting cameras:', err);
+        toast.error('Could not access camera. Please grant permissions.');
+        onClose();
       });
-  }
 
-  componentWillUnmount() {
-    if (this.html5QrCode && this.html5QrCode.isScanning) {
-      this.html5QrCode.stop().catch(err => {
-        console.error("Failed to stop the scanner.", err);
-      });
-    }
-  }
+    return () => {
+      if (qrCodeScannerRef.current && qrCodeScannerRef.current.isScanning) {
+        qrCodeScannerRef.current.stop()
+          .catch((err) => console.error('Failed to stop scanner:', err));
+      }
+    };
+  }, [onScan, onClose]);
 
-  render() {
-    return <div id="reader" style={{ width: '100%' }}></div>;
-  }
-}
+  return <div id="barcode-reader" ref={readerRef} style={{ width: '100%' }} />;
+};
 
 export default BarcodeScanner;

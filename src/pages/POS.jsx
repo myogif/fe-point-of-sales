@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, ChevronLeft, ChevronRight, Menu, Camera, X } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Menu, Camera, X, ShoppingCart } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import ProductCard from '../components/ProductCard';
 import CartSidebar from '../components/CartSidebar';
@@ -13,6 +13,7 @@ const POS = () => {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const addToCart = useCartStore((state) => state.addToCart);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [products, setProducts] = useState([]);
@@ -114,7 +115,15 @@ const POS = () => {
                 </div>
               </form>
             </div>
-            <p className="hidden md:block text-sm text-gray-500">Toko Kelontong Bahagia</p>
+            <div className="flex items-center">
+              <p className="hidden md:block text-sm text-gray-500 mr-4">Toko Kelontong Bahagia</p>
+              <button
+                onClick={() => setIsCartOpen(!isCartOpen)}
+                className="lg:hidden text-gray-500"
+              >
+                <ShoppingCart className="w-6 h-6" />
+              </button>
+            </div>
           </div>
         </header>
 
@@ -176,7 +185,11 @@ const POS = () => {
           </div>
 
           {/* Cart Sidebar */}
-          <div className="w-full lg:w-[380px] xl:w-[420px] bg-white border-l border-gray-200 flex-col absolute lg:relative inset-y-0 right-0 transform transition-transform duration-300 ease-in-out translate-x-full lg:translate-x-0">
+          <div
+            className={`fixed inset-y-0 right-0 z-40 w-full bg-white border-l border-gray-200 flex-col transition-transform duration-300 ease-in-out lg:w-[380px] lg:static lg:translate-x-0 ${
+              isCartOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
+          >
             <CartSidebar />
           </div>
         </div>
