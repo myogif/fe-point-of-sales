@@ -14,6 +14,7 @@ import {
   List,
   X,
   Menu,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
@@ -23,14 +24,15 @@ const Sidebar = () => {
   const { isSidebarOpen, toggleSidebar, isCollapsed, toggleCollapse } = useSidebar();
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+    // { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: ShoppingCart, label: 'Sales (POS)', path: '/' },
-    { icon: ShoppingBag, label: 'Purchases', path: '/purchases' },
+    // { icon: ShoppingBag, label: 'Purchases', path: '/purchases' },
     { icon: Package, label: 'Products', path: '/products' },
     { icon: List, label: 'Categories', path: '/categories' },
+    { icon: ArrowLeftRight, label: 'Transactions', path: '/transactions' },
     { icon: Users, label: 'Customers', path: '/customers' },
     { icon: CreditCard, label: 'Credit', path: '/credit' },
-    { icon: BarChart3, label: 'Reports', path: '/reports' },
+    // { icon: BarChart3, label: 'Reports', path: '/reports' },
   ];
 
   return (
