@@ -9,69 +9,46 @@ const BarcodeScanner = ({ onScan, onClose }) => {
   const [cameras, setCameras] = useState([]);
   const [selectedCameraId, setSelectedCameraId] = useState('');
 
-  const startScanner = useCallback(() => {
-    if (!readerRef.current || !selectedCameraId) return;
+  useEffect(() => {
+    const scanner = new Html5Qrcode(readerRef.current.id);
+    qrCodeScannerRef.current = scanner;
 
-    const qrCodeScanner = new Html5Qrcode(readerRef.current.id);
-    qrCodeScannerRef.current = qrCodeScanner;
-
-    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+    const successCallback = (decodedText, decodedResult) => {
       onScan(decodedText);
+      scanner.stop();
       onClose();
     };
 
-    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+    const errorCallback = (errorMessage) => {
+      // ignore
+    };
 
-    qrCodeScanner.start(
-      selectedCameraId,
-      config,
-      qrCodeSuccessCallback
-    ).catch((err) => {
-      console.error('Error starting scanner:', err);
-      toast.error('Failed to start scanner. Please grant camera permissions.');
-      onClose();
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+    Html5Qrcode.getCameras().then(cameras => {
+      setCameras(cameras);
+      if (cameras && cameras.length) {
+        const camId = selectedCameraId || cameras[0].id;
+        setSelectedCameraId(camId);
+        scanner.start({ deviceId: { exact: camId } }, config, successCallback, errorCallback)
+          .catch(err => {
+            toast.error("Failed to start scanner.");
+          });
+      }
+    }).catch(err => {
+      toast.error("No cameras found.");
     });
-  }, [selectedCameraId, onScan, onClose]);
 
-  useEffect(() => {
-    Html5Qrcode.getCameras()
-      .then((cameraDevices) => {
-        if (cameraDevices && cameraDevices.length) {
-          setCameras(cameraDevices);
-          setSelectedCameraId(cameraDevices[0].id);
-        } else {
-          toast.error('No cameras found.');
-          onClose();
-        }
-      })
-      .catch((err) => {
-        console.error('Error getting cameras:', err);
-        toast.error('Could not access camera. Please grant permissions.');
-        onClose();
-      });
-  }, [onClose]);
-
-  useEffect(() => {
-    if (selectedCameraId) {
-      if (qrCodeScannerRef.current && qrCodeScannerRef.current.isScanning) {
-        qrCodeScannerRef.current.stop().then(() => {
-          startScanner();
-        });
-      } else {
-        startScanner();
-      }
-    }
     return () => {
-      if (qrCodeScannerRef.current && qrCodeScannerRef.current.isScanning) {
-        qrCodeScannerRef.current.stop()
-          .catch((err) => console.error('Failed to stop scanner:', err));
+      if (scanner && scanner.isScanning) {
+        scanner.stop().catch(err => console.error("failed to stop scanner", err));
       }
     };
-  }, [selectedCameraId, startScanner]);
+  }, [onClose, onScan, selectedCameraId]);
 
   const switchCamera = () => {
     if (cameras.length > 1) {
-      const currentIndex = cameras.findIndex(c => c.id === selectedCameraId);
+      const currentIndex = cameras.findIndex((c) => c.id === selectedCameraId);
       const nextIndex = (currentIndex + 1) % cameras.length;
       setSelectedCameraId(cameras[nextIndex].id);
     }

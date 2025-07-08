@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { salesAPI } from '../services/api';
 import CreateCreditModal from './CreateCreditModal'; // Import the modal
 
-const CartSidebar = () => {
+const CartSidebar = ({ onClose }) => {
   const { items, clearCart, getCartTotal, getTotalItems } = useCartStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCreditModal, setShowCreditModal] = useState(false); // State to control modal visibility
@@ -62,9 +62,14 @@ const CartSidebar = () => {
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <header className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">Current Order</h2>
-        <p className="text-sm text-gray-500">{getTotalItems()} items</p>
+      <header className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-800">Current Order</h2>
+          <p className="text-sm text-gray-500">{getTotalItems()} items</p>
+        </div>
+        <button onClick={onClose} className="lg:hidden text-gray-500">
+          <X className="w-6 h-6" />
+        </button>
       </header>
 
       {/* Cart Items */}
