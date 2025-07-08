@@ -71,7 +71,8 @@ const POS = () => {
       const response = await productsAPI.getAll({ search: barcode, limit: 1 });
       const product = response.data.data[0];
       if (product) {
-        addToCart(product);
+        const defaultUnit = product.price_pcs ? 'pcs' : product.price_kg ? 'kg' : 'ons';
+        addToCart(product, 1, defaultUnit);
       } else {
         toast.error('Product not found!');
       }

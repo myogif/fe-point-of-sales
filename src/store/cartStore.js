@@ -6,22 +6,28 @@ const useCartStore = create(
   persist(
     (set, get) => ({
       items: [],
-      addToCart: (product, quantity = 1) => {
+      addToCart: (product, quantity = 1, unit) => {
         const { items } = get();
-        const existingItem = items.find((item) => item.id === product.id);
+        const existingItem = items.find(
+          (item) => item.id === product.id && item.selectedUnit === unit
+        );
 
         if (existingItem) {
           set({
             items: items.map((item) =>
-              item.id === product.id
+              item.id === product.id && item.selectedUnit === unit
                 ? { ...item, quantity: item.quantity + quantity }
                 : item
             ),
           });
           toast.success(`${product.name} quantity updated`);
         } else {
+          const price = product[`price_${unit}`] || 0;
           set({
-            items: [...items, { ...product, quantity }],
+            items: [
+              ...items,
+              { ...product, quantity, selectedUnit: unit, price },
+            ],
           });
           toast.success(`${product.name} added to cart`);
         }
@@ -56,7 +62,11 @@ const useCartStore = create(
       },
       getCartTotal: () => {
         const { items } = get();
-        return items.reduce((total, item) => total + item.price * item.quantity, 0);
+        return items.reduce((total, item) => {
+          const price = item.price || 0;
+          const quantity = item.quantity || 0;
+          return total + price * quantity;
+        }, 0);
       },
       getTotalItems: () => {
         const { items } = get();

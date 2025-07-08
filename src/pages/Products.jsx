@@ -314,92 +314,134 @@ const Products = () => {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-900">Product</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-900">Category</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-900">Prices</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-900">Stock</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-900">Barcode</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-900">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {products.map(product => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={product.image_url || 'https://images.pexels.com/photos/1656663/pexels-photo-1656663.jpeg?auto=compress&cs=tinysrgb&w=400'}
-                          alt={product.name}
-                          className="w-12 h-12 object-cover rounded-lg"
-                        />
-                        <div>
-                          <p className="font-medium text-gray-900">{product.name}</p>
-                          <p className="text-sm text-gray-500">{product.description}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
-                        style={{ backgroundColor: getCategoryColor(product.category_id) }}
-                      >
-                        {getCategoryName(product.category_id)}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="text-sm space-y-1">
-                        {getProductPrices(product).map((price, index) => (
-                          <div key={index} className="text-gray-900">{price}</div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-sm font-medium ${
-                          product.stock <= 5 ? 'text-red-600' :
-                          product.stock <= 10 ? 'text-yellow-600' : 'text-green-600'
-                        }`}>
-                          {product.stock}
-                        </span>
-                        {product.stock <= 5 && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            Low Stock
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                        {product.barcode}
-                      </code>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleEditProduct(product)}
-                          className="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-md hover:bg-blue-50"
-                          title="Edit product"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="text-red-600 hover:text-red-800 transition-colors p-1 rounded-md hover:bg-red-50"
-                          title="Delete product"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+        <div>
+          {/* Mobile View */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
+            {products.map(product => (
+              <div key={product.id} className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
+                <div className="flex items-start space-x-4">
+                  <img
+                    src={product.image_url || 'https://via.placeholder.com/80'}
+                    alt={product.name}
+                    className="w-16 h-16 object-cover rounded-lg"
+                  />
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-800">{product.name}</p>
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                      style={{ backgroundColor: getCategoryColor(product.category_id) }}
+                    >
+                      {getCategoryName(product.category_id)}
+                    </span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button onClick={() => handleEditProduct(product)} className="text-blue-600"><Edit size={18} /></button>
+                    <button onClick={() => handleDeleteProduct(product.id)} className="text-red-600"><Trash2 size={18} /></button>
+                  </div>
+                </div>
+                <div className="text-sm space-y-1">
+                  {getProductPrices(product).map((price, index) => (
+                    <div key={index} className="text-gray-700">{price}</div>
+                  ))}
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className={`font-medium ${product.stock <= 5 ? 'text-red-600' : 'text-green-600'}`}>
+                    Stock: {product.stock}
+                  </span>
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">{product.barcode}</code>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Product</th>
+                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Category</th>
+                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Prices</th>
+                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Stock</th>
+                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Barcode</th>
+                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {products.map(product => (
+                    <tr key={product.id} className="hover:bg-gray-50">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={product.image_url || 'https://images.pexels.com/photos/1656663/pexels-photo-1656663.jpeg?auto=compress&cs=tinysrgb&w=400'}
+                            alt={product.name}
+                            className="w-12 h-12 object-cover rounded-lg"
+                          />
+                          <div>
+                            <p className="font-medium text-gray-900">{product.name}</p>
+                            <p className="text-sm text-gray-500">{product.description}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                          style={{ backgroundColor: getCategoryColor(product.category_id) }}
+                        >
+                          {getCategoryName(product.category_id)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="text-sm space-y-1">
+                          {getProductPrices(product).map((price, index) => (
+                            <div key={index} className="text-gray-900">{price}</div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-sm font-medium ${
+                            product.stock <= 5 ? 'text-red-600' :
+                            product.stock <= 10 ? 'text-yellow-600' : 'text-green-600'
+                          }`}>
+                            {product.stock}
+                          </span>
+                          {product.stock <= 5 && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              Low Stock
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                          {product.barcode}
+                        </code>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleEditProduct(product)}
+                            className="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-md hover:bg-blue-50"
+                            title="Edit product"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="text-red-600 hover:text-red-800 transition-colors p-1 rounded-md hover:bg-red-50"
+                            title="Delete product"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
           {pagination && pagination.total > 0 && (
             <div className="flex items-center justify-between p-4 border-t border-gray-200">

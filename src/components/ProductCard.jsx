@@ -44,7 +44,7 @@ const ProductCard = ({ product }) => {
 
   const handleAddToCart = () => {
     if (quantity > 0) {
-      addToCart({ ...product, price: getPrice(), selectedUnit }, quantity);
+      addToCart(product, quantity, selectedUnit);
       setQuantity(1);
     }
   };
