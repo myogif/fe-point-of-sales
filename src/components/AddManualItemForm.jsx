@@ -15,11 +15,11 @@ const AddManualItemForm = () => {
       id: `manual-${Date.now()}`,
       name: productName,
       price_pcs: parseFloat(price),
-      stock_quantity: 'N/A',
+      stock: 'N/A',
       image_url: 'https://via.placeholder.com/150',
     };
 
-    addToCart(manualItem);
+    addToCart(manualItem, 1, 'pcs');
     setProductName('');
     setPrice('');
   };

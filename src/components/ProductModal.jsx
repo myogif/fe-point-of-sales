@@ -11,8 +11,9 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess }) => {
     name: '',
     barcode: '',
     description: '',
-    unit_type: 'pcs',
-    price: '',
+    price_kg: '',
+    price_ons: '',
+    price_pcs: '',
     stock: '',
     category_id: '',
     image_url: ''
@@ -29,14 +30,13 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess }) => {
 
   useEffect(() => {
     if (product) {
-      const unit = product.unit_type || 'pcs';
-      const price = product[`price_${unit}`] || '';
       setFormData({
         name: product.name || '',
         barcode: product.barcode || '',
         description: product.description || '',
-        unit_type: unit,
-        price: price,
+        price_kg: product.price_kg || '',
+        price_ons: product.price_ons || '',
+        price_pcs: product.price_pcs || '',
         stock: product.stock || '',
         category_id: product.category_id || '',
         image_url: product.image_url || ''
@@ -47,8 +47,9 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess }) => {
         name: '',
         barcode: '',
         description: '',
-        unit_type: 'pcs',
-        price: '',
+        price_kg: '',
+        price_ons: '',
+        price_pcs: '',
         stock: '',
         category_id: '',
         image_url: ''
@@ -120,8 +121,8 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess }) => {
       return;
     }
 
-    if (!formData.price) {
-      toast.error('Please set a price');
+    if (!formData.price_pcs && !formData.price_kg && !formData.price_ons) {
+      toast.error('Please set at least one price');
       return;
     }
 
@@ -132,17 +133,13 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess }) => {
         name: formData.name,
         barcode: formData.barcode,
         description: formData.description,
-        unit_type: formData.unit_type,
         stock: parseFloat(formData.stock) || 0,
         category_id: formData.category_id,
         image_url: formData.image_url,
-        price_kg: null,
-        price_ons: null,
-        price_pcs: null,
-        price_liter: null,
+        price_kg: parseFloat(formData.price_kg) || null,
+        price_ons: parseFloat(formData.price_ons) || null,
+        price_pcs: parseFloat(formData.price_pcs) || null,
       };
-      
-      productData[`price_${formData.unit_type}`] = parseFloat(formData.price);
       
       if (product) {
         // Update existing product
@@ -301,51 +298,53 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess }) => {
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-900">Pricing & Image</h3>
               
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Unit Type *
-                  </label>
-                  <select
-                    name="unit_type"
-                    value={formData.unit_type}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-                    required
-                  >
-                    <option value="pcs">Pcs</option>
-                    <option value="kg">Kg</option>
-                    <option value="ons">Ons</option>
-                    <option value="liter">Liter</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price per {formData.unit_type} *
+                    Price per Pcs
                   </label>
                   <input
                     type="number"
-                    name="price"
-                    value={formData.price}
+                    name="price_pcs"
+                    value={formData.price_pcs}
                     onChange={handleChange}
                     step="100"
                     min="0"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="0"
-                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Price per Kg
+                  </label>
+                  <input
+                    type="number"
+                    name="price_kg"
+                    value={formData.price_kg}
+                    onChange={handleChange}
+                    step="100"
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Price per Ons
+                  </label>
+                  <input
+                    type="number"
+                    name="price_ons"
+                    value={formData.price_ons}
+                    onChange={handleChange}
+                    step="100"
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="0"
                   />
                 </div>
               </div>
-
-              {/* Price Preview */}
-              {formData.price && (
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Price Preview:</h4>
-                  <div className="text-sm space-y-1">
-                    <div>{formatPrice(formData.price)}/{formData.unit_type}</div>
-                  </div>
-                </div>
-              )}
 
               {/* Image Upload */}
               <div>
