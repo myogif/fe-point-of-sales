@@ -117,7 +117,7 @@ const POS = () => {
               </form>
             </div>
             <div className="flex items-center">
-              <p className="hidden md:block text-sm text-gray-500 mr-4">Toko Kelontong Bahagia</p>
+              <p className="hidden md:block text-sm text-gray-500 mr-4">Toko Pak Imam</p>
               <button
                 onClick={() => setIsCartOpen(!isCartOpen)}
                 className="lg:hidden text-gray-500"
