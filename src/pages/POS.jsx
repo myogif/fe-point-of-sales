@@ -152,15 +152,13 @@ const POS = () => {
                 </div>
               ) : (
                 <div className="space-y-3 max-w-3xl mx-auto">
+                  {/* Manual Item Input - Moved to top */}
+                  <AddManualItemForm />
+                  
+                  {/* Product List */}
                   {products.map((product) => (
                     <ProductListItem key={product.id} product={product} />
                   ))}
-                  
-                  {/* Manual Item Section */}
-                  <div className="mt-6 bg-white rounded-lg shadow-md p-4">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Add Manual Item</h3>
-                    <AddManualItemForm />
-                  </div>
                 </div>
               )}
 

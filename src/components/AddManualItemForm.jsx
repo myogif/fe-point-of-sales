@@ -25,47 +25,30 @@ const AddManualItemForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full">
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <label htmlFor="product-name" className="block text-sm font-medium text-gray-700 mb-1">
-            Product Name
-          </label>
-          <input
-            id="product-name"
-            type="text"
-            value={productName}
-            onChange={(e) => setProductName(e.target.value)}
-            placeholder="Enter product name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-        
-        <div className="w-full sm:w-1/3">
-          <label htmlFor="product-price" className="block text-sm font-medium text-gray-700 mb-1">
-            Price
-          </label>
-          <input
-            id="product-price"
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-        
-        <div className="flex items-end">
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
-          >
-            <Plus className="w-5 h-5" />
-            Add
-          </button>
-        </div>
+    <form onSubmit={handleSubmit} className="w-full bg-white rounded-lg shadow-md p-3 mb-3">
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          value={productName}
+          onChange={(e) => setProductName(e.target.value)}
+          placeholder="Product Name"
+          className="flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          required
+        />
+        <input
+          type="number"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          placeholder="Rp 0"
+          className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          required
+        />
+        <button
+          type="submit"
+          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
       </div>
     </form>
   );

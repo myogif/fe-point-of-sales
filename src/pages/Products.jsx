@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Edit, Trash2, Package, Filter, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Package, Filter, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { productsAPI, categoriesAPI } from '../services/api';
-import { formatPrice } from '../utils/priceFormatter';
-import ProductModal from '../components/ProductModal';
+import ProductCardNew from '../components/ProductCardNew';
 import toast from 'react-hot-toast';
 
 const Products = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -97,13 +96,11 @@ const Products = () => {
   };
 
   const handleAddProduct = () => {
-    setSelectedProduct(null);
-    setModalOpen(true);
+    navigate('/products/add');
   };
 
   const handleEditProduct = (product) => {
-    setSelectedProduct(product);
-    setModalOpen(true);
+    navigate(`/products/edit/${product.id}`);
   };
 
   const handleDeleteProduct = async (productId) => {
@@ -197,72 +194,34 @@ const Products = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Products</h1>
-            <p className="text-gray-600">Manage your product inventory (Live Data)</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </button>
-            <button 
-              onClick={handleAddProduct}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Product</span>
-            </button>
-          </div>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+        <div className="mb-4 md:mb-0">
+          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+          <p className="text-sm text-gray-600">Manage your product inventory</p>
         </div>
-
-        {/* Live Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Package className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900">{stats.total}</h3>
-                <p className="text-sm text-gray-600">Total Products</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Package className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900">{stats.inStock}</h3>
-                <p className="text-sm text-gray-600">In Stock</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <Package className="w-6 h-6 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900">{stats.lowStock}</h3>
-                <p className="text-sm text-gray-600">Low Stock</p>
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="bg-blue-100 text-blue-600 px-3 py-2 rounded-xl hover:bg-blue-200 transition-colors flex items-center space-x-1 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+          <button
+            onClick={handleAddProduct}
+            className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors flex items-center space-x-1"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Product</span>
+          </button>
         </div>
+      </div>
 
-        {/* Filters */}
-        <div className="flex flex-col lg:flex-row gap-4">
+      {/* Search and Filter */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -270,7 +229,7 @@ const Products = () => {
               placeholder="Search products by name or barcode..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           
@@ -279,7 +238,7 @@ const Products = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+              className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="all">All Categories</option>
               {categories.map(category => (
@@ -314,135 +273,42 @@ const Products = () => {
           )}
         </div>
       ) : (
-        <div>
-          {/* Mobile View */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
-            {products.map(product => (
-              <div key={product.id} className="bg-white rounded-lg shadow-sm border p-4 space-y-3">
-                <div className="flex items-start space-x-4">
-                  <img
-                    src={product.image_url || 'https://via.placeholder.com/80'}
-                    alt={product.name}
-                    className="w-16 h-16 object-cover rounded-lg"
-                  />
-                  <div className="flex-1">
-                    <p className="font-bold text-gray-800">{product.name}</p>
-                    <span
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                      style={{ backgroundColor: getCategoryColor(product.category_id) }}
-                    >
-                      {getCategoryName(product.category_id)}
-                    </span>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button onClick={() => handleEditProduct(product)} className="text-blue-600"><Edit size={18} /></button>
-                    <button onClick={() => handleDeleteProduct(product.id)} className="text-red-600"><Trash2 size={18} /></button>
-                  </div>
-                </div>
-                <div className="text-sm space-y-1">
-                  {getProductPrices(product).map((price, index) => (
-                    <div key={index} className="text-gray-700">{price}</div>
-                  ))}
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className={`font-medium ${product.stock <= 5 ? 'text-red-600' : 'text-green-600'}`}>
-                    Stock: {product.stock}
-                  </span>
-                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">{product.barcode}</code>
-                </div>
-              </div>
-            ))}
+      {/* Product Cards */}
+      {products.length === 0 && !loading ? (
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-4">
+            <Package className="w-16 h-16 mx-auto" />
           </div>
-
-          {/* Desktop View */}
-          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Product</th>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Category</th>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Prices</th>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Stock</th>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Barcode</th>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-900">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {products.map(product => (
-                    <tr key={product.id} className="hover:bg-gray-50">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={product.image_url || 'https://images.pexels.com/photos/1656663/pexels-photo-1656663.jpeg?auto=compress&cs=tinysrgb&w=400'}
-                            alt={product.name}
-                            className="w-12 h-12 object-cover rounded-lg"
-                          />
-                          <div>
-                            <p className="font-medium text-gray-900">{product.name}</p>
-                            <p className="text-sm text-gray-500">{product.description}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
-                          style={{ backgroundColor: getCategoryColor(product.category_id) }}
-                        >
-                          {getCategoryName(product.category_id)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="text-sm space-y-1">
-                          {getProductPrices(product).map((price, index) => (
-                            <div key={index} className="text-gray-900">{price}</div>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center space-x-2">
-                          <span className={`text-sm font-medium ${
-                            product.stock <= 5 ? 'text-red-600' :
-                            product.stock <= 10 ? 'text-yellow-600' : 'text-green-600'
-                          }`}>
-                            {product.stock}
-                          </span>
-                          {product.stock <= 5 && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              Low Stock
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                          {product.barcode}
-                        </code>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => handleEditProduct(product)}
-                            className="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-md hover:bg-blue-50"
-                            title="Edit product"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProduct(product.id)}
-                            className="text-red-600 hover:text-red-800 transition-colors p-1 rounded-md hover:bg-red-50"
-                            title="Delete product"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <p className="text-gray-600 mb-4">
+            {searchTerm || selectedCategory !== 'all'
+              ? 'No products found matching your criteria'
+              : 'No products found in database'
+            }
+          </p>
+          {!searchTerm && selectedCategory === 'all' && (
+            <button
+              onClick={handleAddProduct}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center space-x-2 mx-auto"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Add Your First Product</span>
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {products.map(product => (
+            <ProductCardNew
+              key={product.id}
+              product={product}
+              onEdit={handleEditProduct}
+              onDelete={handleDeleteProduct}
+              getCategoryName={getCategoryName}
+              getCategoryColor={getCategoryColor}
+            />
+          ))}
+        </div>
+      )}
           {pagination && pagination.total > 0 && (
             <div className="flex items-center justify-between p-4 border-t border-gray-200">
               <span className="text-sm text-gray-700">
@@ -469,12 +335,6 @@ const Products = () => {
         </div>
       )}
 
-      <ProductModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        product={selectedProduct}
-        onSuccess={handleModalSuccess}
-      />
     </div>
   );
 };

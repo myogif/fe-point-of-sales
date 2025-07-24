@@ -17,6 +17,7 @@ import Purchases from './pages/Purchases';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Transactions from './pages/Transactions';
+import AddProductForm from './components/AddProductForm';
 
 function App() {
   return (
@@ -35,6 +36,8 @@ function App() {
                 <Route index element={<POS />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="products" element={<Products />} />
+                <Route path="products/add" element={<AddProductForm />} />
+                <Route path="products/edit/:id" element={<AddProductForm />} />
                 <Route path="categories" element={<Categories />} />
                 <Route path="purchases" element={<Purchases />} />
                 <Route path="customers" element={<Customers />} />
