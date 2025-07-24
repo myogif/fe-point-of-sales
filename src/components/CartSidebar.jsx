@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Trash2, X, Tag, CreditCard } from 'lucide-react';
-import useCartStore from '../store/cartStore';
+import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/priceFormatter';
 import CartItem from './CartItem';
 import AddManualItemForm from './AddManualItemForm';
@@ -9,7 +9,7 @@ import { salesAPI } from '../services/api';
 import CreateCreditModal from './CreateCreditModal'; // Import the modal
 
 const CartSidebar = ({ onClose }) => {
-  const { items, clearCart, getCartTotal, getTotalItems } = useCartStore();
+  const { cart: items, clearCart, getCartTotal, processPayment, saveAsCredit } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCreditModal, setShowCreditModal] = useState(false); // State to control modal visibility
 
@@ -20,21 +20,12 @@ const CartSidebar = ({ onClose }) => {
     }
     setIsProcessing(true);
     try {
-      // In a real app, you would integrate a payment gateway here
-      await salesAPI.create({
-        items: items.map(item => ({
-          id: item.id,
-          quantity: item.quantity,
-          price: item.price_pcs,
-          total: item.price_pcs * item.quantity,
-          selectedUnit: 'pcs'
-        })),
-        total: getCartTotal(),
-        payment_method: 'cash', // Example
-      });
-      toast.success('Payment successful!');
-      clearCart();
-      setActiveTab('cart');
+      const success = await processPayment();
+      if (success) {
+        toast.success('Payment successful!');
+      } else {
+        toast.error('Payment failed. Please try again.');
+      }
     } catch (error) {
       console.error('Payment failed:', error);
       toast.error('Payment failed. Please try again.');
@@ -65,7 +56,7 @@ const CartSidebar = ({ onClose }) => {
       <header className="flex items-center justify-between p-4 border-b border-gray-200">
         <div>
           <h2 className="text-lg font-semibold text-gray-800">Current Order</h2>
-          <p className="text-sm text-gray-500">{getTotalItems()} items</p>
+          <p className="text-sm text-gray-500">{items.length} items</p>
         </div>
         <button onClick={onClose} className="lg:hidden text-gray-500">
           <X className="w-6 h-6" />

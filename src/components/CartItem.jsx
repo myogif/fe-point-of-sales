@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Plus, Minus } from 'lucide-react';
-import useCartStore from '../store/cartStore';
+import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/priceFormatter';
 
 const CartItem = ({ item }) => {
-  const { removeFromCart, updateQuantity, updatePrice } = useCartStore();
+  const { removeFromCart, updateItem } = useCart();
   const [price, setPrice] = useState(item.price);
   const [quantity, setQuantity] = useState(item.quantity);
 
@@ -16,13 +16,13 @@ const CartItem = ({ item }) => {
   const handlePriceChange = (e) => {
     const newPrice = parseFloat(e.target.value) || 0;
     setPrice(newPrice);
-    updatePrice(item.id, item.selectedUnit, newPrice);
+    updateItem(item.id, item.selectedUnit, { price: newPrice });
   };
 
   const handleQuantityChange = (amount) => {
     const newQuantity = Math.max(0, quantity + amount);
     setQuantity(newQuantity);
-    updateQuantity(item.id, item.selectedUnit, amount);
+    updateItem(item.id, item.selectedUnit, { quantity: newQuantity });
   };
 
   return (

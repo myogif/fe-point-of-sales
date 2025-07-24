@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import useCartStore from '../store/cartStore';
+import { useCart } from '../context/CartContext';
 import { PlusCircle } from 'lucide-react';
 
 const AddManualItemForm = () => {
   const [productName, setProductName] = useState('');
   const [price, setPrice] = useState('');
-  const addToCart = useCartStore((state) => state.addToCart);
+  const { addToCart } = useCart();
 
   const handleSubmit = (e) => {
     e.preventDefault();

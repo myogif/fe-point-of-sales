@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus, ShoppingCart } from 'lucide-react';
-import useCartStore from '../store/cartStore';
+import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/priceFormatter';
 
 const ProductCard = ({ product }) => {
-  const { addToCart } = useCartStore();
+  const { addToCart } = useCart();
   
   const getInitialUnit = () => {
     if (product.price_kg) return 'kg';

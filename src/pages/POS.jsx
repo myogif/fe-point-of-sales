@@ -3,15 +3,17 @@ import { Search, ChevronLeft, ChevronRight, Menu, Camera, X, ShoppingCart } from
 import Sidebar from '../components/Sidebar';
 import ProductCard from '../components/ProductCard';
 import CartSidebar from '../components/CartSidebar';
+import CartBar from '../components/CartBar';
+import CategoryTabs from '../components/CategoryTabs';
 import BarcodeScanner from '../components/BarcodeScanner';
 import { productsAPI, categoriesAPI } from '../services/api';
 import { useSidebar } from '../context/SidebarContext';
-import useCartStore from '../store/cartStore';
+import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 
 const POS = () => {
   const { isCollapsed, toggleSidebar } = useSidebar();
-  const addToCart = useCartStore((state) => state.addToCart);
+  const { addToCart } = useCart();
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -132,28 +134,14 @@ const POS = () => {
           {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-y-auto">
             {/* Categories */}
-            <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
-              <div className="px-4 sm:px-6 py-3 overflow-x-auto">
-                <div className="flex space-x-2">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => {
-                        setSelectedCategory(cat.id);
-                        setCurrentPage(1);
-                      }}
-                      className={`px-4 py-2 text-sm font-semibold rounded-full whitespace-nowrap transition-colors ${
-                        selectedCategory === cat.id
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-600 hover:bg-blue-100'
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </nav>
+            <CategoryTabs
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={(categoryId) => {
+                setSelectedCategory(categoryId);
+                setCurrentPage(1);
+              }}
+            />
 
             {/* Product Grid */}
             <main className="flex-1 p-4 sm:p-6">
@@ -201,6 +189,9 @@ const POS = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Cart Bar */}
+      <CartBar onCheckout={() => setIsCartOpen(true)} />
 
       {isScannerOpen && (
         <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
