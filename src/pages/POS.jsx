@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, ChevronLeft, ChevronRight, Menu, Camera, X, ShoppingCart } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
-import ProductCard from '../components/ProductCard';
+import ProductListItem from '../components/ProductListItem';
 import CartSidebar from '../components/CartSidebar';
 import CartBar from '../components/CartBar';
 import CategoryTabs from '../components/CategoryTabs';
 import BarcodeScanner from '../components/BarcodeScanner';
+import AddManualItemForm from '../components/AddManualItemForm';
 import { productsAPI, categoriesAPI } from '../services/api';
 import { useSidebar } from '../context/SidebarContext';
 import { useCart } from '../context/CartContext';
@@ -143,17 +144,23 @@ const POS = () => {
               }}
             />
 
-            {/* Product Grid */}
+            {/* Product List */}
             <main className="flex-1 p-4 sm:p-6">
               {loading ? (
                 <div className="flex justify-center items-center h-full">
                   <div className="animate-spin rounded-full h-24 w-24 border-t-2 border-b-2 border-blue-600"></div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+                <div className="space-y-3 max-w-3xl mx-auto">
                   {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductListItem key={product.id} product={product} />
                   ))}
+                  
+                  {/* Manual Item Section */}
+                  <div className="mt-6 bg-white rounded-lg shadow-md p-4">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Add Manual Item</h3>
+                    <AddManualItemForm />
+                  </div>
                 </div>
               )}
 
