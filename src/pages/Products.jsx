@@ -119,41 +119,6 @@ const Products = () => {
     }
   };
 
-  const handleModalSuccess = async () => {
-    // Refresh data from API after add/edit
-    await fetchData(false);
-    toast.success('Product data updated successfully');
-  };
-
-  const getProductPrices = (product) => {
-    const prices = [];
-    
-    // Show prices based on what's actually available for this product
-    if (product.price_kg > 0) prices.push(`${formatPrice(product.price_kg)}/kg`);
-    if (product.price_ons > 0) prices.push(`${formatPrice(product.price_ons)}/ons`);
-    if (product.price_pcs > 0) prices.push(`${formatPrice(product.price_pcs)}/pcs`);
-    if (product.price_liter > 0) prices.push(`${formatPrice(product.price_liter)}/liter`);
-    
-    // If no prices found, show the primary unit type
-    if (prices.length === 0) {
-      switch(product.unit_type) {
-        case 'pcs':
-          prices.push(`${formatPrice(product.price_pcs)}/pcs`);
-          break;
-        case 'kg':
-          prices.push(`${formatPrice(product.price_kg)}/kg`);
-          break;
-        case 'liter':
-          prices.push(`${formatPrice(product.price_liter)}/liter`);
-          break;
-        default:
-          prices.push('Price not set');
-      }
-    }
-    
-    return prices;
-  };
-
   // Calculate stats from live data
   const stats = {
     total: products.length,
@@ -181,8 +146,8 @@ const Products = () => {
             <p className="text-lg font-medium">Error Loading Products</p>
             <p className="text-sm">{error}</p>
           </div>
-          <button 
-            onClick={() => fetchData()}
+          <button
+            onClick={() => fetchProducts()}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
           >
             Try Again
@@ -251,28 +216,6 @@ const Products = () => {
         </div>
       </div>
 
-      {products.length === 0 && !loading ? (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <Package className="w-16 h-16 mx-auto" />
-          </div>
-          <p className="text-gray-600 mb-4">
-            {searchTerm || selectedCategory !== 'all'
-              ? 'No products found matching your criteria'
-              : 'No products found in database'
-            }
-          </p>
-          {!searchTerm && selectedCategory === 'all' && (
-            <button
-              onClick={handleAddProduct}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 mx-auto"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Add Your First Product</span>
-            </button>
-          )}
-        </div>
-      ) : (
       {/* Product Cards */}
       {products.length === 0 && !loading ? (
         <div className="text-center py-12">
@@ -309,32 +252,30 @@ const Products = () => {
           ))}
         </div>
       )}
-          {pagination && pagination.total > 0 && (
-            <div className="flex items-center justify-between p-4 border-t border-gray-200">
-              <span className="text-sm text-gray-700">
-                Page {pagination.page} of {pagination.totalPages} (Total: {pagination.total} items)
-              </span>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === pagination.totalPages}
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
+      
+      {pagination && pagination.total > 0 && (
+        <div className="flex items-center justify-between p-4 mt-4 bg-white rounded-xl shadow-sm border border-gray-200">
+          <span className="text-sm text-gray-700">
+            Page {pagination.page} of {pagination.totalPages} (Total: {pagination.total} items)
+          </span>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === pagination.totalPages}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
-
     </div>
   );
 };
