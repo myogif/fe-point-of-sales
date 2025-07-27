@@ -17,7 +17,6 @@ const POS = () => {
   const { addToCart } = useCart();
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [scannedProduct, setScannedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [products, setProducts] = useState([]);
@@ -71,20 +70,20 @@ const POS = () => {
 
   const handleBarcodeScan = useCallback(async (barcode) => {
     setIsScannerOpen(false);
+    
+    // Fill the search term with the barcode and trigger search
+    setSearchTerm(barcode);
+    setCurrentPage(1);
+    
     try {
-      const response = await productsAPI.getAll({ search: barcode, limit: 1 });
-      const product = response.data.data[0];
-      if (product) {
-        setScannedProduct(product);
-        toast.success('Product found!');
-      } else {
-        toast.error('Product not found!');
-      }
+      // Perform search with the barcode
+      await fetchProducts(1, selectedCategory, barcode);
+      toast.success('Barcode scanned and searched!');
     } catch (error) {
-      console.error('Error finding product by barcode:', error);
-      toast.error('Error finding product.');
+      console.error('Error searching with barcode:', error);
+      toast.error('Error searching with barcode.');
     }
-  }, []);
+  }, [selectedCategory, fetchProducts]);
 
 
   return (
@@ -156,11 +155,6 @@ const POS = () => {
                 <div className="space-y-3 max-w-3xl mx-auto">
                   {/* Manual Item Input - Moved to top */}
                   <AddManualItemForm />
-                  
-                  {/* Scanned Product Display */}
-                  {scannedProduct && (
-                    <ProductListItem key={`scanned-${scannedProduct.id}`} product={scannedProduct} />
-                  )}
                   
                   {/* Product List */}
                   {products.map((product) => (
