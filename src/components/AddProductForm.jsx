@@ -31,7 +31,7 @@ const AddProductForm = () => {
   const [imagePreview, setImagePreview] = useState('');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditMode);
-  const [imageInputMode, setImageInputMode] = useState('upload'); // 'upload' or 'url'
+  const [imageInputMode, setImageInputMode] = useState('url'); // 'upload' or 'url'
   const [imageUrlInput, setImageUrlInput] = useState('');
 
   // Fetch categories
