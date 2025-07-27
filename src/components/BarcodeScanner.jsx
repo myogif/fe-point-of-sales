@@ -8,62 +8,122 @@ const BarcodeScanner = ({ onScan, onClose }) => {
   const qrCodeScannerRef = useRef(null);
   const [cameras, setCameras] = useState([]);
   const [selectedCameraId, setSelectedCameraId] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+
+  const startScanner = useCallback(async (cameraId) => {
+    if (!qrCodeScannerRef.current || !cameraId) return;
+
+    const scanner = qrCodeScannerRef.current;
+    
+    try {
+      // Stop current scanning if active
+      if (scanner.isScanning) {
+        await scanner.stop();
+        setIsScanning(false);
+      }
+
+      const successCallback = (decodedText, decodedResult) => {
+        onScan(decodedText);
+        scanner.stop().then(() => {
+          setIsScanning(false);
+          onClose();
+        });
+      };
+
+      const errorCallback = (errorMessage) => {
+        // ignore scanning errors
+      };
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+      };
+
+      await scanner.start(
+        { deviceId: { exact: cameraId } },
+        config,
+        successCallback,
+        errorCallback
+      );
+      
+      setIsScanning(true);
+    } catch (err) {
+      console.error("Failed to start scanner:", err);
+      toast.error("Failed to start scanner. Please try again.");
+      setIsScanning(false);
+    }
+  }, [onScan, onClose]);
 
   useEffect(() => {
-    const scanner = new Html5Qrcode(readerRef.current.id);
-    qrCodeScannerRef.current = scanner;
+    const initializeScanner = async () => {
+      try {
+        const scanner = new Html5Qrcode("barcode-reader");
+        qrCodeScannerRef.current = scanner;
 
-    const successCallback = (decodedText, decodedResult) => {
-      onScan(decodedText);
-      scanner.stop();
-      onClose();
-    };
-
-    const errorCallback = (errorMessage) => {
-      // ignore
-    };
-
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-    Html5Qrcode.getCameras().then(cameras => {
-      setCameras(cameras);
-      if (cameras && cameras.length) {
-        const camId = selectedCameraId || cameras[0].id;
-        setSelectedCameraId(camId);
-        scanner.start({ deviceId: { exact: camId } }, config, successCallback, errorCallback)
-          .catch(err => {
-            toast.error("Failed to start scanner.");
-          });
+        const availableCameras = await Html5Qrcode.getCameras();
+        setCameras(availableCameras);
+        
+        if (availableCameras && availableCameras.length > 0) {
+          const defaultCameraId = availableCameras[0].id;
+          setSelectedCameraId(defaultCameraId);
+          await startScanner(defaultCameraId);
+        } else {
+          toast.error("No cameras found.");
+        }
+      } catch (err) {
+        console.error("Failed to initialize scanner:", err);
+        toast.error("Failed to access camera. Please check permissions.");
       }
-    }).catch(err => {
-      toast.error("No cameras found.");
-    });
+    };
+
+    initializeScanner();
 
     return () => {
-      if (scanner && scanner.isScanning) {
-        scanner.stop().catch(err => console.error("failed to stop scanner", err));
+      if (qrCodeScannerRef.current && qrCodeScannerRef.current.isScanning) {
+        qrCodeScannerRef.current.stop().catch(err =>
+          console.error("Failed to stop scanner on cleanup:", err)
+        );
       }
     };
-  }, [onClose, onScan, selectedCameraId]);
+  }, [startScanner]);
 
-  const switchCamera = () => {
+  const switchCamera = async () => {
     if (cameras.length > 1) {
       const currentIndex = cameras.findIndex((c) => c.id === selectedCameraId);
       const nextIndex = (currentIndex + 1) % cameras.length;
-      setSelectedCameraId(cameras[nextIndex].id);
+      const nextCameraId = cameras[nextIndex].id;
+      
+      setSelectedCameraId(nextCameraId);
+      await startScanner(nextCameraId);
     }
   };
 
   return (
     <div className="relative">
-      <div id="barcode-reader" ref={readerRef} style={{ width: '100%' }} />
+      <div id="barcode-reader" style={{ width: '100%' }} />
+      
+      {/* Camera Switch Button */}
       {cameras.length > 1 && (
         <button
           onClick={switchCamera}
-          className="absolute bottom-4 right-4 bg-white p-2 rounded-full shadow-md"
+          className="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+          title="Switch Camera"
         >
-          <Camera className="w-6 h-6 text-gray-700" />
+          <Camera className="w-5 h-5 text-gray-700" />
         </button>
+      )}
+      
+      {/* Scanner Status */}
+      <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+        {isScanning ? 'Scanning...' : 'Starting camera...'}
+      </div>
+      
+      {/* Camera Info */}
+      {cameras.length > 1 && selectedCameraId && (
+        <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+          Camera {cameras.findIndex(c => c.id === selectedCameraId) + 1}/{cameras.length}
+        </div>
       )}
     </div>
   );
