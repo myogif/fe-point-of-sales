@@ -16,6 +16,7 @@ const Products = () => {
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, product: null });
 
   // Fetch products from API
   const fetchProducts = useCallback(async (page = 1, category = 'all', search = '') => {
@@ -103,31 +104,41 @@ const Products = () => {
     navigate(`/products/edit/${product.id}`);
   };
 
-  const handleDeleteProduct = async (productId) => {
-    if (window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-      try {
-        await productsAPI.delete(productId);
-        
-        // Refresh data from API after deletion maintaining current state
+  const handleDeleteProduct = (product) => {
+    setDeleteModal({ isOpen: true, product });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.product) return;
+    
+    try {
+      await productsAPI.delete(deleteModal.product.id);
+      
+      // Refresh data from API after deletion maintaining current state
+      await fetchProducts(currentPage, selectedCategory, searchTerm);
+      
+      toast.success('Product deleted successfully');
+      setDeleteModal({ isOpen: false, product: null });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 409 && error.response?.data?.code === 'PRODUCT_IN_USE') {
+        toast.error('Cannot delete product as it is referenced in sales records');
+      } else if (error.response?.status === 404) {
+        toast.error('Product not found. It may have already been deleted.');
+        // Refresh the list to remove the non-existent product
         await fetchProducts(currentPage, selectedCategory, searchTerm);
-        
-        toast.success('Product deleted successfully');
-      } catch (error) {
-        console.error('Error deleting product:', error);
-        
-        // Handle specific error cases
-        if (error.response?.status === 409 && error.response?.data?.code === 'PRODUCT_IN_USE') {
-          toast.error('Cannot delete product as it is referenced in sales records');
-        } else if (error.response?.status === 404) {
-          toast.error('Product not found. It may have already been deleted.');
-          // Refresh the list to remove the non-existent product
-          await fetchProducts(currentPage, selectedCategory, searchTerm);
-        } else {
-          const message = error.response?.data?.error || error.message || 'Failed to delete product';
-          toast.error(message);
-        }
+      } else {
+        const message = error.response?.data?.error || error.message || 'Failed to delete product';
+        toast.error(message);
       }
+      setDeleteModal({ isOpen: false, product: null });
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModal({ isOpen: false, product: null });
   };
 
   // Calculate stats from live data
@@ -256,7 +267,7 @@ const Products = () => {
               key={product.id}
               product={product}
               onEdit={handleEditProduct}
-              onDelete={handleDeleteProduct}
+              onDelete={() => handleDeleteProduct(product)}
               getCategoryName={getCategoryName}
               getCategoryColor={getCategoryColor}
             />
@@ -284,6 +295,34 @@ const Products = () => {
             >
               <ChevronRight className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Delete Product
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete "{deleteModal.product?.name}"? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://be-point-of-sales.vercel.app/api';
+const API_BASE_URL = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:3001/api'
+  : 'https://be-point-of-sales.vercel.app/api';
 
 // Create axios instance
 const api = axios.create({

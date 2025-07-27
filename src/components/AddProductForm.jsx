@@ -22,7 +22,6 @@ const AddProductForm = () => {
     price_pcs: '',
     price_liter: '',
     stock: '',
-    sku: '',
     image_url: ''
   });
   
@@ -69,7 +68,6 @@ const AddProductForm = () => {
             price_pcs: product.price_pcs || '',
             price_liter: product.price_liter || '',
             stock: product.stock || '',
-            sku: product.sku || '',
             image_url: product.image_url || ''
           });
           
@@ -159,8 +157,31 @@ const AddProductForm = () => {
       return;
     }
 
+    // Validate price limits (max 99,999,999.99 due to database precision)
+    const maxPrice = 99999999.99;
+    if (parseFloat(currentPrice) > maxPrice) {
+      toast.error(`Price cannot exceed ${maxPrice.toLocaleString()}`);
+      return;
+    }
+
+    // Validate other price fields if they have values
+    const priceFields = ['price_kg', 'price_ons', 'price_pcs', 'price_liter'];
+    for (const field of priceFields) {
+      if (formData[field] && parseFloat(formData[field]) > maxPrice) {
+        toast.error(`${field.replace('price_', '').toUpperCase()} price cannot exceed ${maxPrice.toLocaleString()}`);
+        return;
+      }
+    }
+
     if (formData.stock && parseFloat(formData.stock) < 0) {
       toast.error('Stock cannot be negative');
+      return;
+    }
+
+    // Validate stock limit
+    const maxStock = 99999999.99;
+    if (formData.stock && parseFloat(formData.stock) > maxStock) {
+      toast.error(`Stock cannot exceed ${maxStock.toLocaleString()}`);
       return;
     }
 
@@ -184,7 +205,6 @@ const AddProductForm = () => {
         price_pcs: parseFloat(formData.price_pcs) || null,
         price_liter: parseFloat(formData.price_liter) || null,
         stock: parseFloat(formData.stock) || 0,
-        sku: formData.sku.trim(),
         image_url: formData.image_url
       };
       
@@ -212,6 +232,8 @@ const AddProductForm = () => {
       } else if (error.response?.status === 400) {
         if (error.response?.data?.code === 'INVALID_CATEGORY') {
           toast.error('Invalid category selected. Please choose a valid category.');
+        } else if (error.response?.data?.code === 'NUMERIC_OVERFLOW') {
+          toast.error('One or more values exceed the maximum limit (99,999,999.99)');
         } else {
           const message = error.response?.data?.error || 'Invalid product data';
           toast.error(message);
@@ -385,6 +407,7 @@ const AddProductForm = () => {
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="0"
                   min="0"
+                  max="99999999.99"
                   step="100"
                   required={formData.unit_type === 'pcs'}
                 />
@@ -409,6 +432,7 @@ const AddProductForm = () => {
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="0"
                   min="0"
+                  max="99999999.99"
                   step="100"
                   required={formData.unit_type === 'kg'}
                 />
@@ -433,6 +457,7 @@ const AddProductForm = () => {
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="0"
                   min="0"
+                  max="99999999.99"
                   step="100"
                   required={formData.unit_type === 'ons'}
                 />
@@ -457,6 +482,7 @@ const AddProductForm = () => {
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="0"
                   min="0"
+                  max="99999999.99"
                   step="100"
                   required={formData.unit_type === 'liter'}
                 />
@@ -478,25 +504,11 @@ const AddProductForm = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="0"
               min="0"
+              max="99999999.99"
               step="1"
             />
           </div>
 
-          {/* SKU */}
-          <div>
-            <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">
-              SKU (Optional)
-            </label>
-            <input
-              type="text"
-              id="sku"
-              name="sku"
-              value={formData.sku}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter SKU"
-            />
-          </div>
 
 
           {/* Image Upload */}
