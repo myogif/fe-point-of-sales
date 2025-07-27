@@ -11,6 +11,7 @@ const Categories = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, category: null });
 
   const fetchCategories = useCallback(async (page = 1) => {
     setLoading(true);
@@ -47,17 +48,41 @@ const Categories = () => {
     setModalOpen(true);
   };
 
-  const handleDeleteCategory = async (categoryId) => {
-    if (window.confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
-      try {
-        await categoriesAPI.delete(categoryId);
-        setCategories(categories.filter(c => c.id !== categoryId));
-        toast.success('Category deleted successfully');
-      } catch (error) {
-        const message = error.response?.data?.error || 'Failed to delete category';
+  const handleDeleteCategory = (category) => {
+    setDeleteModal({ isOpen: true, category });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.category) return;
+    
+    try {
+      await categoriesAPI.delete(deleteModal.category.id);
+      
+      // Refresh categories from API after deletion
+      await fetchCategories(currentPage);
+      
+      toast.success('Category deleted successfully');
+      setDeleteModal({ isOpen: false, category: null });
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 409 && error.response?.data?.code === 'CATEGORY_IN_USE') {
+        toast.error('Cannot delete category as it is being used by products');
+      } else if (error.response?.status === 404) {
+        toast.error('Category not found. It may have already been deleted.');
+        // Refresh the list to remove the non-existent category
+        await fetchCategories(currentPage);
+      } else {
+        const message = error.response?.data?.error || error.message || 'Failed to delete category';
         toast.error(message);
       }
+      setDeleteModal({ isOpen: false, category: null });
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModal({ isOpen: false, category: null });
   };
 
   const handleModalSuccess = () => {
@@ -144,7 +169,7 @@ const Categories = () => {
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleDeleteCategory(category.id)}
+                      onClick={() => handleDeleteCategory(category)}
                       className="text-red-600 hover:text-red-800 transition-colors p-1 rounded-md hover:bg-red-50"
                       title="Delete category"
                     >
@@ -200,6 +225,43 @@ const Categories = () => {
         category={selectedCategory}
         onSuccess={handleModalSuccess}
       />
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Delete Category
+            </h3>
+            <div className="flex items-center space-x-3 mb-4">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                style={{ backgroundColor: deleteModal.category?.color }}
+              >
+                {deleteModal.category?.name?.charAt(0).toUpperCase()}
+              </div>
+              <span className="font-medium text-gray-900">{deleteModal.category?.name}</span>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this category? This action cannot be undone and will affect any products using this category.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
