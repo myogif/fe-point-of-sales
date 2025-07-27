@@ -17,7 +17,6 @@ const POS = () => {
   const { addToCart } = useCart();
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [scannedProduct, setScannedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -77,7 +76,6 @@ const POS = () => {
       const product = response.data.data[0];
       if (product) {
         setScannedProduct(product);
-        setIsProductModalOpen(true);
         toast.success('Product found!');
       } else {
         toast.error('Product not found!');
@@ -92,7 +90,6 @@ const POS = () => {
     if (scannedProduct) {
       const defaultUnit = unit || (scannedProduct.price_pcs ? 'pcs' : scannedProduct.price_kg ? 'kg' : 'ons');
       addToCart(scannedProduct, 1, defaultUnit);
-      setIsProductModalOpen(false);
       setScannedProduct(null);
       toast.success('Product added to cart!');
     }
@@ -168,6 +165,134 @@ const POS = () => {
                   {/* Manual Item Input - Moved to top */}
                   <AddManualItemForm />
                   
+                  {/* Scanned Product Display */}
+                  {scannedProduct && (
+                    <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-blue-800 flex items-center">
+                          <Package className="w-5 h-5 mr-2" />
+                          Scanned Product
+                        </h3>
+                        <button
+                          onClick={() => setScannedProduct(null)}
+                          className="text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        {/* Product Image */}
+                        {scannedProduct.image_url && (
+                          <div className="flex-shrink-0">
+                            <img
+                              src={scannedProduct.image_url}
+                              alt={scannedProduct.name}
+                              className="w-full sm:w-24 h-24 object-cover rounded-lg border border-gray-200"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Product Details */}
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-800 text-lg">{scannedProduct.name}</h4>
+                          {scannedProduct.description && (
+                            <p className="text-gray-600 text-sm mt-1">{scannedProduct.description}</p>
+                          )}
+                          
+                          <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                            <div>
+                              <span className="text-gray-500">Stock:</span>
+                              <span className="font-medium ml-1">{scannedProduct.stock || 0}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Category:</span>
+                              <span className="font-medium ml-1">{scannedProduct.category?.name || 'N/A'}</span>
+                            </div>
+                          </div>
+                          
+                          {/* Price Display */}
+                          <div className="mt-2">
+                            <div className="flex flex-wrap gap-2 text-sm">
+                              {scannedProduct.price_pcs && (
+                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                  Rp {scannedProduct.price_pcs.toLocaleString()}/pcs
+                                </span>
+                              )}
+                              {scannedProduct.price_kg && (
+                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                  Rp {scannedProduct.price_kg.toLocaleString()}/kg
+                                </span>
+                              )}
+                              {scannedProduct.price_ons && (
+                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                  Rp {scannedProduct.price_ons.toLocaleString()}/ons
+                                </span>
+                              )}
+                              {scannedProduct.price_liter && (
+                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                  Rp {scannedProduct.price_liter.toLocaleString()}/liter
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Add Button */}
+                        <div className="flex-shrink-0 flex flex-col gap-2">
+                          <button
+                            onClick={() => handleAddScannedProductToCart()}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add
+                          </button>
+                          
+                          {/* Unit Selection Buttons */}
+                          {(scannedProduct.price_pcs || scannedProduct.price_kg || scannedProduct.price_ons || scannedProduct.price_liter) && (
+                            <div className="flex flex-col gap-1">
+                              {scannedProduct.price_pcs && (
+                                <button
+                                  onClick={() => handleAddScannedProductToCart('pcs')}
+                                  className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                                >
+                                  Add as Pcs
+                                </button>
+                              )}
+                              {scannedProduct.price_kg && (
+                                <button
+                                  onClick={() => handleAddScannedProductToCart('kg')}
+                                  className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                                >
+                                  Add as KG
+                                </button>
+                              )}
+                              {scannedProduct.price_ons && (
+                                <button
+                                  onClick={() => handleAddScannedProductToCart('ons')}
+                                  className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                                >
+                                  Add as Ons
+                                </button>
+                              )}
+                              {scannedProduct.price_liter && (
+                                <button
+                                  onClick={() => handleAddScannedProductToCart('liter')}
+                                  className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                                >
+                                  Add as Liter
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Product List */}
                   {products.map((product) => (
                     <ProductListItem key={product.id} product={product} />
@@ -232,166 +357,6 @@ const POS = () => {
         </div>
       )}
 
-      {/* Product Display Modal */}
-      {isProductModalOpen && scannedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                <Package className="w-5 h-5 mr-2 text-blue-600" />
-                Product Found
-              </h2>
-              <button
-                onClick={() => {
-                  setIsProductModalOpen(false);
-                  setScannedProduct(null);
-                }}
-                className="text-gray-500 hover:text-gray-800 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Product Image */}
-            {scannedProduct.image_url && (
-              <div className="p-4 pb-0">
-                <img
-                  src={scannedProduct.image_url}
-                  alt={scannedProduct.name}
-                  className="w-full h-48 object-cover rounded-lg border border-gray-200"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Product Details */}
-            <div className="p-4 space-y-3">
-              <div>
-                <h3 className="text-xl font-bold text-gray-800">{scannedProduct.name}</h3>
-                {scannedProduct.description && (
-                  <p className="text-gray-600 text-sm mt-1">{scannedProduct.description}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-gray-500">Barcode:</span>
-                  <p className="font-medium">{scannedProduct.barcode}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Stock:</span>
-                  <p className="font-medium">{scannedProduct.stock || 0}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Unit Type:</span>
-                  <p className="font-medium capitalize">{scannedProduct.unit_type}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Category:</span>
-                  <p className="font-medium">{scannedProduct.category?.name || 'N/A'}</p>
-                </div>
-              </div>
-
-              {/* Prices */}
-              <div className="border-t pt-3">
-                <h4 className="font-medium text-gray-800 mb-2">Available Prices:</h4>
-                <div className="space-y-2">
-                  {scannedProduct.price_pcs && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Per Piece:</span>
-                      <span className="font-medium">Rp {scannedProduct.price_pcs.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {scannedProduct.price_kg && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Per KG:</span>
-                      <span className="font-medium">Rp {scannedProduct.price_kg.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {scannedProduct.price_ons && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Per Ons:</span>
-                      <span className="font-medium">Rp {scannedProduct.price_ons.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {scannedProduct.price_liter && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Per Liter:</span>
-                      <span className="font-medium">Rp {scannedProduct.price_liter.toLocaleString()}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="p-4 border-t bg-gray-50 rounded-b-xl">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setIsProductModalOpen(false);
-                    setScannedProduct(null);
-                  }}
-                  className="flex-1 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => handleAddScannedProductToCart()}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add to Cart
-                </button>
-              </div>
-              
-              {/* Unit Selection Buttons */}
-              {(scannedProduct.price_pcs || scannedProduct.price_kg || scannedProduct.price_ons || scannedProduct.price_liter) && (
-                <div className="mt-3">
-                  <p className="text-xs text-gray-500 mb-2">Or add with specific unit:</p>
-                  <div className="flex gap-1 flex-wrap">
-                    {scannedProduct.price_pcs && (
-                      <button
-                        onClick={() => handleAddScannedProductToCart('pcs')}
-                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
-                      >
-                        Add as Pieces
-                      </button>
-                    )}
-                    {scannedProduct.price_kg && (
-                      <button
-                        onClick={() => handleAddScannedProductToCart('kg')}
-                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
-                      >
-                        Add as KG
-                      </button>
-                    )}
-                    {scannedProduct.price_ons && (
-                      <button
-                        onClick={() => handleAddScannedProductToCart('ons')}
-                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
-                      >
-                        Add as Ons
-                      </button>
-                    )}
-                    {scannedProduct.price_liter && (
-                      <button
-                        onClick={() => handleAddScannedProductToCart('liter')}
-                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
-                      >
-                        Add as Liter
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Camera, Save, Upload, Image as ImageIcon, Link, ToggleLeft, ToggleRight } from 'lucide-react';
 import { productsAPI, categoriesAPI, uploadAPI } from '../services/api';
 import BarcodeScanner from './BarcodeScanner';
@@ -8,6 +8,7 @@ import imageCompression from 'browser-image-compression';
 
 const AddProductForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
   const isEditMode = !!id;
   
@@ -78,7 +79,7 @@ const AddProductForm = () => {
         } catch (error) {
           console.error('Error fetching product:', error);
           toast.error('Failed to load product data');
-          navigate('/products');
+          navigateBackToProducts();
         }
       }
     };
@@ -124,6 +125,24 @@ const AddProductForm = () => {
   const handleImageUrlBlur = () => {
     if (imageUrlInput && !isValidImageUrl(imageUrlInput)) {
       toast.error('Please enter a valid image URL (jpg, png, gif, etc.)');
+    }
+  };
+
+  // Navigate back to products with preserved state
+  const navigateBackToProducts = () => {
+    const state = location.state;
+    if (state && state.returnPage) {
+      // Build URL with query parameters to preserve the state
+      const params = new URLSearchParams();
+      if (state.returnPage > 1) params.set('page', state.returnPage);
+      if (state.returnCategory && state.returnCategory !== 'all') params.set('category', state.returnCategory);
+      if (state.returnSearch) params.set('search', state.returnSearch);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/products?${queryString}` : '/products';
+      navigate(url);
+    } else {
+      navigate('/products');
     }
   };
 
@@ -615,7 +634,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
         toast.success('Product created successfully');
       }
       
-      navigate('/products');
+      navigateBackToProducts();
     } catch (error) {
       console.error('Error saving product:', error);
       
@@ -637,7 +656,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
         }
       } else if (error.response?.status === 404 && isEditMode) {
         toast.error('Product not found. It may have been deleted.');
-        navigate('/products');
+        navigateBackToProducts();
       } else {
         const message = error.response?.data?.error || error.message || 'Failed to save product';
         toast.error(message);
@@ -658,8 +677,8 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
   return (
     <div className="max-w-3xl mx-auto p-4">
       <div className="flex items-center mb-6">
-        <button 
-          onClick={() => navigate('/products')}
+        <button
+          onClick={navigateBackToProducts}
           className="mr-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />

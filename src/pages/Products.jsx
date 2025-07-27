@@ -1,21 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Package, Filter, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { productsAPI, categoriesAPI } from '../services/api';
 import ProductCardNew from '../components/ProductCardNew';
 import toast from 'react-hot-toast';
 
 const Products = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchParams] = useSearchParams();
+  
+  // Initialize state from URL parameters
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
+  
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, product: null });
 
   // Fetch products from API
@@ -101,7 +105,13 @@ const Products = () => {
   };
 
   const handleEditProduct = (product) => {
-    navigate(`/products/edit/${product.id}`);
+    // Pass current page state to maintain position after edit
+    const state = {
+      returnPage: currentPage,
+      returnCategory: selectedCategory,
+      returnSearch: searchTerm
+    };
+    navigate(`/products/edit/${product.id}`, { state });
   };
 
   const handleDeleteProduct = (product) => {
