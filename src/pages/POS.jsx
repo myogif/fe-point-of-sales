@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, ChevronLeft, ChevronRight, Menu, Camera, X, ShoppingCart, Package, Plus } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Menu, Camera, X, ShoppingCart } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import ProductListItem from '../components/ProductListItem';
 import CartSidebar from '../components/CartSidebar';
@@ -86,14 +86,6 @@ const POS = () => {
     }
   }, []);
 
-  const handleAddScannedProductToCart = (unit = null) => {
-    if (scannedProduct) {
-      const defaultUnit = unit || (scannedProduct.price_pcs ? 'pcs' : scannedProduct.price_kg ? 'kg' : 'ons');
-      addToCart(scannedProduct, 1, defaultUnit);
-      setScannedProduct(null);
-      toast.success('Product added to cart!');
-    }
-  };
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
@@ -167,130 +159,7 @@ const POS = () => {
                   
                   {/* Scanned Product Display */}
                   {scannedProduct && (
-                    <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-blue-800 flex items-center">
-                          <Package className="w-5 h-5 mr-2" />
-                          Scanned Product
-                        </h3>
-                        <button
-                          onClick={() => setScannedProduct(null)}
-                          className="text-blue-600 hover:text-blue-800 transition-colors"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
-                      
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        {/* Product Image */}
-                        {scannedProduct.image_url && (
-                          <div className="flex-shrink-0">
-                            <img
-                              src={scannedProduct.image_url}
-                              alt={scannedProduct.name}
-                              className="w-full sm:w-24 h-24 object-cover rounded-lg border border-gray-200"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
-                            />
-                          </div>
-                        )}
-                        
-                        {/* Product Details */}
-                        <div className="flex-1">
-                          <h4 className="font-bold text-gray-800 text-lg">{scannedProduct.name}</h4>
-                          {scannedProduct.description && (
-                            <p className="text-gray-600 text-sm mt-1">{scannedProduct.description}</p>
-                          )}
-                          
-                          <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-                            <div>
-                              <span className="text-gray-500">Stock:</span>
-                              <span className="font-medium ml-1">{scannedProduct.stock || 0}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Category:</span>
-                              <span className="font-medium ml-1">{scannedProduct.category?.name || 'N/A'}</span>
-                            </div>
-                          </div>
-                          
-                          {/* Price Display */}
-                          <div className="mt-2">
-                            <div className="flex flex-wrap gap-2 text-sm">
-                              {scannedProduct.price_pcs && (
-                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                                  Rp {scannedProduct.price_pcs.toLocaleString()}/pcs
-                                </span>
-                              )}
-                              {scannedProduct.price_kg && (
-                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                                  Rp {scannedProduct.price_kg.toLocaleString()}/kg
-                                </span>
-                              )}
-                              {scannedProduct.price_ons && (
-                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                                  Rp {scannedProduct.price_ons.toLocaleString()}/ons
-                                </span>
-                              )}
-                              {scannedProduct.price_liter && (
-                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                                  Rp {scannedProduct.price_liter.toLocaleString()}/liter
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Add Button */}
-                        <div className="flex-shrink-0 flex flex-col gap-2">
-                          <button
-                            onClick={() => handleAddScannedProductToCart()}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Add
-                          </button>
-                          
-                          {/* Unit Selection Buttons */}
-                          {(scannedProduct.price_pcs || scannedProduct.price_kg || scannedProduct.price_ons || scannedProduct.price_liter) && (
-                            <div className="flex flex-col gap-1">
-                              {scannedProduct.price_pcs && (
-                                <button
-                                  onClick={() => handleAddScannedProductToCart('pcs')}
-                                  className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-                                >
-                                  Add as Pcs
-                                </button>
-                              )}
-                              {scannedProduct.price_kg && (
-                                <button
-                                  onClick={() => handleAddScannedProductToCart('kg')}
-                                  className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-                                >
-                                  Add as KG
-                                </button>
-                              )}
-                              {scannedProduct.price_ons && (
-                                <button
-                                  onClick={() => handleAddScannedProductToCart('ons')}
-                                  className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-                                >
-                                  Add as Ons
-                                </button>
-                              )}
-                              {scannedProduct.price_liter && (
-                                <button
-                                  onClick={() => handleAddScannedProductToCart('liter')}
-                                  className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-                                >
-                                  Add as Liter
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <ProductListItem key={`scanned-${scannedProduct.id}`} product={scannedProduct} />
                   )}
                   
                   {/* Product List */}
