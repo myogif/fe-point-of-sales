@@ -187,20 +187,33 @@ const AddProductForm = () => {
           console.log('📱 Strategy 2: Standard upload');
           return uploadAPI.uploadImage(formDataUpload);
         },
-        // Strategy 3: Fetch API direct call
+        // Strategy 3: Fetch API direct call with full URL
         async () => {
           console.log('📱 Strategy 3: Direct fetch API');
           const token = localStorage.getItem('auth_token');
-          return fetch('/api/upload/image', {
+          const hostname = window.location.hostname;
+          const apiUrl = hostname !== 'localhost' && hostname !== '127.0.0.1'
+            ? `http://${hostname}:3001/api/upload/image`
+            : 'http://localhost:3001/api/upload/image';
+          
+          console.log('📱 Using direct API URL:', apiUrl);
+          
+          return fetch(apiUrl, {
             method: 'POST',
             body: formDataUpload,
             headers: {
-              'Authorization': `Bearer ${token}`
+              'Authorization': `Bearer ${token}`,
+              // Don't set Content-Type for FormData, let browser set it with boundary
             },
             cache: 'no-cache',
             mode: 'cors'
           }).then(res => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            console.log('📱 Direct fetch response:', {
+              status: res.status,
+              statusText: res.statusText,
+              ok: res.ok
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
             return res.json().then(data => ({ data }));
           });
         }
