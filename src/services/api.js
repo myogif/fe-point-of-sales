@@ -105,11 +105,36 @@ export const customersAPI = {
 
 // Upload API
 export const uploadAPI = {
-  uploadImage: (formData) => api.post('/upload/image', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  }),
+  uploadImage: (formData) => {
+    // Create a custom axios instance for uploads with longer timeout
+    const uploadConfig = {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 30000, // 30 seconds timeout for uploads
+      // Ensure the request bypasses service worker cache
+      cache: 'no-cache',
+    };
+
+    return api.post('/upload/image', formData, uploadConfig)
+      .catch(error => {
+        // Enhanced error handling for PWA
+        if (!error.response && !error.request) {
+          // Network error
+          error.code = 'NETWORK_ERROR';
+          error.message = 'Network connection failed. Please check your internet connection.';
+        } else if (error.code === 'ECONNABORTED') {
+          // Timeout error
+          error.message = 'Upload timeout. Please try again with a smaller image.';
+        } else if (!error.response) {
+          // Request was made but no response received
+          error.code = 'NETWORK_ERROR';
+          error.message = 'No response from server. Please check your connection.';
+        }
+        
+        throw error;
+      });
+  },
 };
 
 export default api;

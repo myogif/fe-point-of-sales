@@ -98,6 +98,18 @@ const AddProductForm = () => {
     try {
       setImageUploading(true);
       
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+      
       // Compress image
       const options = {
         maxSizeMB: 1,
@@ -107,11 +119,31 @@ const AddProductForm = () => {
       
       const compressedFile = await imageCompression(file, options);
       
-      // Upload to backend
+      // Upload to backend with retry logic for PWA
       const formDataUpload = new FormData();
       formDataUpload.append('image', compressedFile);
       
-      const response = await uploadAPI.uploadImage(formDataUpload);
+      let response;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries) {
+        try {
+          response = await uploadAPI.uploadImage(formDataUpload);
+          break; // Success, exit retry loop
+        } catch (uploadError) {
+          retryCount++;
+          console.warn(`Upload attempt ${retryCount} failed:`, uploadError);
+          
+          if (retryCount >= maxRetries) {
+            throw uploadError; // Re-throw after max retries
+          }
+          
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
+      }
+      
       const imageUrl = response.data.imageUrl;
       
       setFormData(prev => ({ ...prev, image_url: imageUrl }));
@@ -119,7 +151,19 @@ const AddProductForm = () => {
       toast.success('Image uploaded successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      
+      // Enhanced error messages for different scenarios
+      if (error.response?.status === 413) {
+        toast.error('Image file is too large. Please choose a smaller image.');
+      } else if (error.response?.status === 400) {
+        toast.error('Invalid image format. Please choose a valid image file.');
+      } else if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please login again.');
+      } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else {
+        toast.error('Failed to upload image. Please try again.');
+      }
     } finally {
       setImageUploading(false);
     }

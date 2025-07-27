@@ -43,11 +43,13 @@ self.addEventListener('fetch', (event) => {
     );
   }
 
-  // Cache static assets
+  // Cache static assets (but exclude API upload requests)
   if (
-    event.request.destination === 'style' ||
-    event.request.destination === 'script' ||
-    event.request.destination === 'image'
+    (event.request.destination === 'style' ||
+     event.request.destination === 'script' ||
+     event.request.destination === 'image') &&
+    !event.request.url.includes('/api/upload') &&
+    event.request.method === 'GET'
   ) {
     event.respondWith(
       caches.open('static-assets').then((cache) => {
@@ -61,6 +63,31 @@ self.addEventListener('fetch', (event) => {
           );
         });
       })
+    );
+  }
+  // Handle API requests with network-first strategy (especially for uploads)
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Only cache successful GET requests
+          if (event.request.method === 'GET' && response.ok) {
+            const responseClone = response.clone();
+            caches.open('api-cache').then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch((error) => {
+          console.error('API request failed:', error);
+          // Try to serve from cache for GET requests only
+          if (event.request.method === 'GET') {
+            return caches.match(event.request);
+          }
+          // For non-GET requests (like uploads), throw the error
+          throw error;
+        })
     );
   }
 });
