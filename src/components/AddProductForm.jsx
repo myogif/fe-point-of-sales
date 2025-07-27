@@ -23,7 +23,8 @@ const AddProductForm = () => {
     price_pcs: '',
     price_liter: '',
     stock: '',
-    image_url: ''
+    image_url: '',
+    is_online: false
   });
   
   const [categories, setCategories] = useState([]);
@@ -71,7 +72,8 @@ const AddProductForm = () => {
             price_pcs: product.price_pcs || '',
             price_liter: product.price_liter || '',
             stock: product.stock || '',
-            image_url: product.image_url || ''
+            image_url: product.image_url || '',
+            is_online: product.is_online !== undefined ? product.is_online : false
           });
           
           setImagePreview(product.image_url || '');
@@ -621,7 +623,8 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
         price_pcs: parseFloat(formData.price_pcs) || null,
         price_liter: parseFloat(formData.price_liter) || null,
         stock: parseFloat(formData.stock) || 0,
-        image_url: formData.image_url
+        image_url: formData.image_url,
+        is_online: formData.is_online
       };
       
       if (isEditMode) {
@@ -925,7 +928,39 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
             />
           </div>
 
-
+          {/* Online Status */}
+          <div>
+            <label htmlFor="is_online" className="block text-sm font-medium text-gray-700 mb-1">
+              Online Status
+            </label>
+            <div className="flex items-center space-x-3">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="is_online"
+                  value="true"
+                  checked={formData.is_online === true}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_online: true }))}
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Yes (Available Online)</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="is_online"
+                  value="false"
+                  checked={formData.is_online === false}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_online: false }))}
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">No (Store Only)</span>
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Choose whether this product is available for online sales
+            </p>
+          </div>
 
           {/* Image Upload/URL */}
           <div>
