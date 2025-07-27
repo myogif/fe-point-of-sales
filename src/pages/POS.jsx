@@ -40,10 +40,15 @@ const POS = () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchProducts(currentPage, selectedCategory, searchTerm);
-  }, [fetchProducts, currentPage, selectedCategory, searchTerm]);
+  //   useEffect(() => {
+  //   fetchProducts(currentPage, selectedCategory, searchTerm);
+  // }, [fetchProducts, currentPage, selectedCategory, searchTerm]);
 
+  useEffect(() => {
+    fetchProducts(currentPage, selectedCategory, '');
+  }, [fetchProducts, currentPage, selectedCategory]);
+
+  
   useEffect(() => {
     const fetchCategories = async () => {
       try {
