@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { Plus } from 'lucide-react';
+import { DEFAULT_NO_IMAGE_URL } from '../constants/images';
 
 const AddManualItemForm = () => {
   const [productName, setProductName] = useState('');
@@ -16,7 +17,7 @@ const AddManualItemForm = () => {
       name: productName,
       price_pcs: parseFloat(price),
       stock: 'N/A',
-      image_url: 'https://via.placeholder.com/80',
+      image_url: DEFAULT_NO_IMAGE_URL,
     };
 
     addToCart(manualItem, 1, 'pcs');

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import { formatPrice } from '../utils/priceFormatter';
+import { DEFAULT_NO_IMAGE_URL } from '../constants/images';
 
 const ProductCardNew = ({ product, onEdit, onDelete, getCategoryName, getCategoryColor }) => {
   return (
@@ -8,7 +9,7 @@ const ProductCardNew = ({ product, onEdit, onDelete, getCategoryName, getCategor
       {/* Product Image */}
       <div className="relative mb-3">
         <img
-          src={product.image_url || 'https://via.placeholder.com/150'}
+          src={product.image_url || DEFAULT_NO_IMAGE_URL}
           alt={product.name}
           className="w-full h-40 object-cover rounded-xl"
         />

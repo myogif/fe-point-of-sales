@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/priceFormatter';
+import { DEFAULT_NO_IMAGE_URL } from '../constants/images';
 
 const CartItem = ({ item }) => {
   const { removeFromCart, updateItem } = useCart();
@@ -28,7 +29,7 @@ const CartItem = ({ item }) => {
   return (
     <div className="flex items-center p-4 space-x-4">
       <img
-        src={item.image_url || 'https://via.placeholder.com/80'}
+        src={item.image_url || DEFAULT_NO_IMAGE_URL}
         alt={item.name}
         className="w-16 h-16 object-cover rounded-lg"
       />

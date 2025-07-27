@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/priceFormatter';
+import { DEFAULT_NO_IMAGE_URL } from '../constants/images';
 
 const ProductListItem = ({ product }) => {
   const { addToCart } = useCart();
@@ -55,7 +56,7 @@ const ProductListItem = ({ product }) => {
     <div className="bg-white rounded-lg shadow-md p-4 mb-3 flex items-center">
       {/* Product Image */}
       <img
-        src={product.image_url || 'https://via.placeholder.com/80'}
+        src={product.image_url || DEFAULT_NO_IMAGE_URL}
         alt={product.name}
         className="w-20 h-20 object-cover rounded-md mr-4"
       />

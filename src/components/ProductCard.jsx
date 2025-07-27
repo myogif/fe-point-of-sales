@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/priceFormatter';
+import { DEFAULT_NO_IMAGE_URL } from '../constants/images';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -56,7 +57,7 @@ const ProductCard = ({ product }) => {
       <div>
         <div className="relative">
           <img
-            src={product.image_url || 'https://via.placeholder.com/150'}
+            src={product.image_url || DEFAULT_NO_IMAGE_URL}
             alt={product.name}
             className="h-32 w-full object-cover rounded-md"
           />
