@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Upload Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .debug-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>PWA Upload Debug Tool</h1>
+    
+    <div class="debug-info">
+        <h3>Environment Info</h3>
+        <div id="env-info"></div>
+    </div>
+    
+    <div class="debug-info">
+        <h3>Service Worker Status</h3>
+        <div id="sw-info"></div>
+        <button onclick="updateServiceWorker()">Update Service Worker</button>
+        <button onclick="unregisterServiceWorker()">Unregister Service Worker</button>
+    </div>
+    
+    <div class="debug-info">
+        <h3>Upload Test</h3>
+        <input type="file" id="fileInput" accept="image/*">
+        <button onclick="testUpload()">Test Upload</button>
+        <div id="upload-result"></div>
+    </div>
+    
+    <div class="debug-info">
+        <h3>Network Test</h3>
+        <button onclick="testNetworkDirect()">Test Direct Network</button>
+        <button onclick="testNetworkWithSW()">Test with Service Worker</button>
+        <div id="network-result"></div>
+    </div>
+    
+    <div class="debug-info">
+        <h3>Debug Logs</h3>
+        <button onclick="clearLogs()">Clear Logs</button>
+        <pre id="debug-logs"></pre>
+    </div>
+
+    <script>
+        let logs = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            logs.push(logEntry);
+            console.log(logEntry);
+            updateLogsDisplay();
+        }
+        
+        function updateLogsDisplay() {
+            document.getElementById('debug-logs').textContent = logs.join('\n');
+        }
+        
+        function clearLogs() {
+            logs = [];
+            updateLogsDisplay();
+        }
+        
+        function updateEnvInfo() {
+            const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                         window.navigator.standalone ||
+                         document.referrer.includes('android-app://');
+            
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isAndroid = /Android/.test(navigator.userAgent);
+            
+            const info = {
+                'Is PWA': isPWA,
+                'Is Mobile': isMobile,
+                'Is iOS': isIOS,
+                'Is Android': isAndroid,
+                'Display Mode': window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser',
+                'User Agent': navigator.userAgent,
+                'Online': navigator.onLine,
+                'Service Worker Support': 'serviceWorker' in navigator,
+                'Service Worker Controller': !!navigator.serviceWorker?.controller,
+                'Network Connection': navigator.connection ? `${navigator.connection.effectiveType} (${navigator.connection.downlink}Mbps)` : 'Unknown',
+                'Current URL': window.location.href
+            };
+            
+            let html = '';
+            for (const [key, value] of Object.entries(info)) {
+                const color = key.includes('Mobile') || key.includes('iOS') || key.includes('Android') ?
+                    (value ? 'color: #2e7d32;' : 'color: #666;') : '';
+                html += `<strong>${key}:</strong> <span style="${color}">${value}</span><br>`;
+            }
+            
+            document.getElementById('env-info').innerHTML = html;
+            log(`Environment info updated: PWA=${isPWA}, Mobile=${isMobile}`);
+        }
+        
+        async function updateServiceWorkerInfo() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    let html = '';
+                    
+                    if (registration) {
+                        html += `<strong>Registration:</strong> Active<br>`;
+                        html += `<strong>Scope:</strong> ${registration.scope}<br>`;
+                        html += `<strong>Active Worker:</strong> ${registration.active ? 'Yes' : 'No'}<br>`;
+                        html += `<strong>Installing Worker:</strong> ${registration.installing ? 'Yes' : 'No'}<br>`;
+                        html += `<strong>Waiting Worker:</strong> ${registration.waiting ? 'Yes' : 'No'}<br>`;
+                    } else {
+                        html += '<strong>Status:</strong> Not registered<br>';
+                    }
+                    
+                    document.getElementById('sw-info').innerHTML = html;
+                    log('Service Worker info updated');
+                } catch (error) {
+                    document.getElementById('sw-info').innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                    log(`Service Worker info error: ${error.message}`, 'error');
+                }
+            } else {
+                document.getElementById('sw-info').innerHTML = '<span class="error">Service Worker not supported</span>';
+                log('Service Worker not supported', 'error');
+            }
+        }
+        
+        async function updateServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        await registration.update();
+                        log('Service Worker update triggered');
+                        setTimeout(updateServiceWorkerInfo, 1000);
+                    }
+                } catch (error) {
+                    log(`Service Worker update error: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        async function unregisterServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        await registration.unregister();
+                        log('Service Worker unregistered');
+                        setTimeout(updateServiceWorkerInfo, 1000);
+                    }
+                } catch (error) {
+                    log(`Service Worker unregister error: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        async function testUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('upload-result').innerHTML = '<span class="error">Please select a file</span>';
+                return;
+            }
+            
+            log(`Starting upload test with file: ${file.name} (${file.size} bytes)`);
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                const startTime = Date.now();
+                
+                const response = await fetch('/api/upload/image', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token') || 'test-token'}`
+                    }
+                });
+                
+                const uploadTime = Date.now() - startTime;
+                const result = await response.text();
+                
+                log(`Upload completed in ${uploadTime}ms, status: ${response.status}`);
+                
+                if (response.ok) {
+                    document.getElementById('upload-result').innerHTML = `
+                        <div class="success">
+                            <strong>Upload Successful!</strong><br>
+                            Status: ${response.status}<br>
+                            Time: ${uploadTime}ms<br>
+                            Response: ${result}
+                        </div>
+                    `;
+                    log('Upload successful', 'success');
+                } else {
+                    document.getElementById('upload-result').innerHTML = `
+                        <div class="error">
+                            <strong>Upload Failed!</strong><br>
+                            Status: ${response.status}<br>
+                            Response: ${result}
+                        </div>
+                    `;
+                    log(`Upload failed: ${response.status} - ${result}`, 'error');
+                }
+            } catch (error) {
+                document.getElementById('upload-result').innerHTML = `
+                    <div class="error">
+                        <strong>Upload Error!</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                log(`Upload error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testNetworkDirect() {
+            log('Testing direct network connection...');
+            try {
+                const response = await fetch('/api/health', { cache: 'no-cache' });
+                const result = await response.text();
+                
+                document.getElementById('network-result').innerHTML = `
+                    <div class="success">
+                        <strong>Direct Network Test Successful!</strong><br>
+                        Status: ${response.status}<br>
+                        Response: ${result}
+                    </div>
+                `;
+                log('Direct network test successful', 'success');
+            } catch (error) {
+                document.getElementById('network-result').innerHTML = `
+                    <div class="error">
+                        <strong>Direct Network Test Failed!</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                log(`Direct network test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testNetworkWithSW() {
+            log('Testing network with Service Worker...');
+            try {
+                const response = await fetch('/api/health');
+                const result = await response.text();
+                
+                document.getElementById('network-result').innerHTML = `
+                    <div class="success">
+                        <strong>Service Worker Network Test Successful!</strong><br>
+                        Status: ${response.status}<br>
+                        Response: ${result}
+                    </div>
+                `;
+                log('Service Worker network test successful', 'success');
+            } catch (error) {
+                document.getElementById('network-result').innerHTML = `
+                    <div class="error">
+                        <strong>Service Worker Network Test Failed!</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+                log(`Service Worker network test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateEnvInfo();
+            updateServiceWorkerInfo();
+            log('PWA Debug Tool initialized');
+        });
+        
+        // Listen for service worker updates
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                log('Service Worker controller changed');
+                updateServiceWorkerInfo();
+            });
+        }
+    </script>
+</body>
+</html>

@@ -106,30 +106,70 @@ export const customersAPI = {
 // Upload API
 export const uploadAPI = {
   uploadImage: (formData) => {
-    // Create a custom axios instance for uploads with longer timeout
+    // Detect mobile environment
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    // Mobile-specific configuration
     const uploadConfig = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      timeout: 30000, // 30 seconds timeout for uploads
+      timeout: isMobile ? 60000 : 30000, // Longer timeout for mobile
+      // Mobile-specific settings
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
       // Ensure the request bypasses service worker cache
       cache: 'no-cache',
+      // Mobile network optimization
+      ...(isMobile && {
+        adapter: 'http', // Force HTTP adapter on mobile
+        validateStatus: (status) => status < 500, // Accept more status codes on mobile
+      })
     };
+
+    console.log('📱 Mobile upload config:', {
+      isMobile,
+      isIOS,
+      isAndroid,
+      timeout: uploadConfig.timeout,
+      userAgent: navigator.userAgent
+    });
 
     return api.post('/upload/image', formData, uploadConfig)
       .catch(error => {
-        // Enhanced error handling for PWA
+        console.error('📱 Mobile upload error:', {
+          isMobile,
+          isIOS,
+          isAndroid,
+          error: error.message,
+          code: error.code,
+          status: error.response?.status,
+          network: navigator.onLine
+        });
+        
+        // Enhanced error handling for mobile PWA
         if (!error.response && !error.request) {
           // Network error
           error.code = 'NETWORK_ERROR';
-          error.message = 'Network connection failed. Please check your internet connection.';
+          error.message = isMobile
+            ? 'Mobile network error. Please check your connection and try again.'
+            : 'Network connection failed. Please check your internet connection.';
         } else if (error.code === 'ECONNABORTED') {
           // Timeout error
-          error.message = 'Upload timeout. Please try again with a smaller image.';
+          error.message = isMobile
+            ? 'Mobile upload timeout. Please try with a smaller image or better connection.'
+            : 'Upload timeout. Please try again with a smaller image.';
         } else if (!error.response) {
           // Request was made but no response received
           error.code = 'NETWORK_ERROR';
-          error.message = 'No response from server. Please check your connection.';
+          error.message = isMobile
+            ? 'No response from server. Please check your mobile connection.'
+            : 'No response from server. Please check your connection.';
+        } else if (isMobile && error.response?.status >= 500) {
+          // Server error on mobile
+          error.message = 'Server error on mobile. Please try again or contact support.';
         }
         
         throw error;

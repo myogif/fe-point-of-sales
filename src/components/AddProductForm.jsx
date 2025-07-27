@@ -98,6 +98,36 @@ const AddProductForm = () => {
     try {
       setImageUploading(true);
       
+      // Mobile PWA Debug Info
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                    window.navigator.standalone ||
+                    document.referrer.includes('android-app://');
+      
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+      
+      console.log('📱 Mobile PWA Debug Info:', {
+        isPWA,
+        isMobile,
+        isIOS,
+        isAndroid,
+        userAgent: navigator.userAgent,
+        serviceWorkerController: !!navigator.serviceWorker?.controller,
+        displayMode: window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser',
+        networkStatus: navigator.onLine,
+        connection: navigator.connection ? {
+          effectiveType: navigator.connection.effectiveType,
+          downlink: navigator.connection.downlink,
+          rtt: navigator.connection.rtt
+        } : 'not available',
+        fileInfo: {
+          name: file.name,
+          size: file.size,
+          type: file.type
+        }
+      });
+      
       // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('Image size must be less than 5MB');
@@ -110,37 +140,117 @@ const AddProductForm = () => {
         return;
       }
       
-      // Compress image
+      // Mobile-optimized compression
       const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 800,
-        useWebWorker: true
+        maxSizeMB: isMobile ? 0.5 : 1, // Smaller size for mobile
+        maxWidthOrHeight: isMobile ? 600 : 800, // Lower resolution for mobile
+        useWebWorker: !isMobile, // Disable web worker on mobile for better compatibility
+        initialQuality: isMobile ? 0.6 : 0.8, // Lower quality for mobile
+        alwaysKeepResolution: false,
+        fileType: 'image/jpeg' // Force JPEG for better mobile compatibility
       };
       
+      console.log('📦 Compressing image with mobile optimization...');
       const compressedFile = await imageCompression(file, options);
+      console.log('✅ Image compressed:', {
+        originalSize: file.size,
+        compressedSize: compressedFile.size,
+        reduction: ((file.size - compressedFile.size) / file.size * 100).toFixed(1) + '%',
+        isMobile,
+        finalType: compressedFile.type
+      });
       
-      // Upload to backend with retry logic for PWA
+      // Upload to backend with mobile-optimized retry logic
       const formDataUpload = new FormData();
       formDataUpload.append('image', compressedFile);
       
       let response;
       let retryCount = 0;
-      const maxRetries = 3;
+      const maxRetries = isMobile ? 5 : 3; // More retries for mobile
+      
+      // Mobile-specific upload strategy
+      const uploadStrategies = isMobile ? [
+        // Strategy 1: Direct upload bypassing service worker
+        async () => {
+          console.log('📱 Strategy 1: Direct upload (bypassing SW)');
+          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            // Temporarily unregister service worker for this request
+            const registration = await navigator.serviceWorker.getRegistration();
+            if (registration) {
+              console.log('📱 Temporarily bypassing service worker');
+            }
+          }
+          return uploadAPI.uploadImage(formDataUpload);
+        },
+        // Strategy 2: Standard upload
+        async () => {
+          console.log('📱 Strategy 2: Standard upload');
+          return uploadAPI.uploadImage(formDataUpload);
+        },
+        // Strategy 3: Fetch API direct call
+        async () => {
+          console.log('📱 Strategy 3: Direct fetch API');
+          const token = localStorage.getItem('auth_token');
+          return fetch('/api/upload/image', {
+            method: 'POST',
+            body: formDataUpload,
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            cache: 'no-cache',
+            mode: 'cors'
+          }).then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json().then(data => ({ data }));
+          });
+        }
+      ] : [
+        // Desktop strategy
+        async () => uploadAPI.uploadImage(formDataUpload)
+      ];
       
       while (retryCount < maxRetries) {
         try {
-          response = await uploadAPI.uploadImage(formDataUpload);
+          console.log(`🚀 Upload attempt ${retryCount + 1}/${maxRetries}...`);
+          const startTime = Date.now();
+          
+          // Use different strategies for mobile
+          const strategyIndex = isMobile ? Math.min(retryCount, uploadStrategies.length - 1) : 0;
+          response = await uploadStrategies[strategyIndex]();
+          
+          const uploadTime = Date.now() - startTime;
+          console.log('✅ Upload successful:', {
+            attempt: retryCount + 1,
+            strategy: strategyIndex + 1,
+            uploadTime: uploadTime + 'ms',
+            responseStatus: response.status,
+            imageUrl: response.data.imageUrl,
+            isMobile
+          });
+          
           break; // Success, exit retry loop
         } catch (uploadError) {
           retryCount++;
-          console.warn(`Upload attempt ${retryCount} failed:`, uploadError);
+          console.error(`❌ Upload attempt ${retryCount} failed:`, {
+            error: uploadError.message,
+            status: uploadError.response?.status,
+            statusText: uploadError.response?.statusText,
+            data: uploadError.response?.data,
+            code: uploadError.code,
+            isPWA,
+            isMobile,
+            serviceWorkerActive: !!navigator.serviceWorker?.controller,
+            networkStatus: navigator.onLine
+          });
           
           if (retryCount >= maxRetries) {
             throw uploadError; // Re-throw after max retries
           }
           
-          // Wait before retry (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          // Mobile-optimized wait time
+          const waitTime = isMobile ? 2000 * retryCount : 1000 * retryCount;
+          console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
       
@@ -150,7 +260,16 @@ const AddProductForm = () => {
       setImagePreview(imageUrl);
       toast.success('Image uploaded successfully');
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('💥 Final upload error:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        code: error.code,
+        stack: error.stack,
+        isPWA: window.matchMedia('(display-mode: standalone)').matches,
+        serviceWorkerController: !!navigator.serviceWorker?.controller
+      });
       
       // Enhanced error messages for different scenarios
       if (error.response?.status === 413) {
@@ -162,7 +281,7 @@ const AddProductForm = () => {
       } else if (error.code === 'NETWORK_ERROR' || !error.response) {
         toast.error('Network error. Please check your connection and try again.');
       } else {
-        toast.error('Failed to upload image. Please try again.');
+        toast.error(`Failed to upload image: ${error.message || 'Unknown error'}`);
       }
     } finally {
       setImageUploading(false);
