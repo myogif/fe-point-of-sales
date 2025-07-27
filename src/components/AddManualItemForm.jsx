@@ -31,7 +31,7 @@ const AddManualItemForm = () => {
           type="text"
           value={productName}
           onChange={(e) => setProductName(e.target.value)}
-          placeholder="Product Name"
+          placeholder="Nama Produk"
           className="flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           required
         />

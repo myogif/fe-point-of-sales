@@ -34,7 +34,7 @@ const POS = () => {
       setPagination(response.data.pagination);
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Failed to fetch products.');
+      toast.error('Gagal memuat produk.');
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,7 @@ const POS = () => {
     const fetchCategories = async () => {
       try {
         const response = await categoriesAPI.getAll({ limit: 50 });
-        setCategories([{ id: 'all', name: 'All' }, ...response.data.data]);
+        setCategories([{ id: 'all', name: 'Semua' }, ...response.data.data]);
       } catch (error) {
         console.error('Error fetching categories:', error);
       }
@@ -83,10 +83,10 @@ const POS = () => {
     try {
       // Perform search with the barcode
       await fetchProducts(1, selectedCategory, barcode);
-      toast.success('Barcode scanned and searched!');
+      toast.success('Barcode berhasil dipindai dan dicari!');
     } catch (error) {
       console.error('Error searching with barcode:', error);
-      toast.error('Error searching with barcode.');
+      toast.error('Gagal mencari dengan barcode.');
     }
   }, [selectedCategory, fetchProducts]);
 
@@ -102,7 +102,7 @@ const POS = () => {
               <button onClick={toggleSidebar} className="text-gray-500 mr-4 lg:hidden">
                 <Menu className="w-6 h-6" />
               </button>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-800">Point of Sale</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-800">Kasir</h1>
             </div>
             <div className="flex-1 max-w-xs sm:max-w-sm md:max-w-md mx-4">
               <form onSubmit={handleSearchSubmit}>
@@ -110,7 +110,7 @@ const POS = () => {
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="text"
-                    placeholder="Search products..."
+                    placeholder="Cari produk..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-12 pr-12 py-2.5 text-sm border border-gray-200 bg-gray-50 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -174,7 +174,7 @@ const POS = () => {
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <span className="text-sm text-gray-700 mx-2 sm:mx-4">
-                    Page {pagination.page} of {pagination.totalPages}
+                    Halaman {pagination.page} dari {pagination.totalPages}
                   </span>
                   <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === pagination.totalPages} className="p-2 mx-1 rounded-md bg-white border border-gray-300 disabled:opacity-50">
                     <ChevronRight className="w-5 h-5" />
@@ -208,7 +208,7 @@ const POS = () => {
         <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
           <div className="w-full max-w-2xl h-full md:h-auto md:max-h-[80vh] bg-white rounded-lg shadow-xl flex flex-col">
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-semibold">Scan Barcode</h2>
+              <h2 className="text-lg font-semibold">Pindai Barcode</h2>
               <button onClick={() => setIsScannerOpen(false)} className="text-gray-500 hover:text-gray-800">
                 <X className="w-6 h-6" />
               </button>

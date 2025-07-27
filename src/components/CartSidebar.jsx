@@ -15,20 +15,20 @@ const CartSidebar = ({ onClose }) => {
 
   const handleProcessPayment = async () => {
     if (items.length === 0) {
-      toast.error('Cart is empty');
+      toast.error('Keranjang kosong');
       return;
     }
     setIsProcessing(true);
     try {
       const success = await processPayment();
       if (success) {
-        toast.success('Payment successful!');
+        toast.success('Pembayaran berhasil!');
       } else {
-        toast.error('Payment failed. Please try again.');
+        toast.error('Pembayaran gagal. Silakan coba lagi.');
       }
     } catch (error) {
       console.error('Payment failed:', error);
-      toast.error('Payment failed. Please try again.');
+      toast.error('Pembayaran gagal. Silakan coba lagi.');
     } finally {
       setIsProcessing(false);
     }
@@ -36,7 +36,7 @@ const CartSidebar = ({ onClose }) => {
 
   const handleSaveAsCredit = () => {
     if (items.length === 0) {
-      toast.error('Cart is empty');
+      toast.error('Keranjang kosong');
       return;
     }
     setShowCreditModal(true);
@@ -55,8 +55,8 @@ const CartSidebar = ({ onClose }) => {
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b border-gray-200">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">Current Order</h2>
-          <p className="text-sm text-gray-500">{items.length} items</p>
+          <h2 className="text-lg font-semibold text-gray-800">Pesanan Saat Ini</h2>
+          <p className="text-sm text-gray-500">{items.length} item</p>
         </div>
         <button onClick={onClose} className="lg:hidden text-gray-500">
           <X className="w-6 h-6" />
@@ -68,8 +68,8 @@ const CartSidebar = ({ onClose }) => {
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4">
             <ShoppingCart className="w-16 h-16 mb-4 text-gray-300" />
-            <h3 className="text-lg font-semibold">Your cart is empty</h3>
-            <p className="text-sm">Add products to the cart to see them here.</p>
+            <h3 className="text-lg font-semibold">Keranjang Anda kosong</h3>
+            <p className="text-sm">Tambahkan produk ke keranjang untuk melihatnya di sini.</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -103,7 +103,7 @@ const CartSidebar = ({ onClose }) => {
             {isProcessing ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
             ) : (
-            'Proceed to Payment'
+            'Lanjut ke Pembayaran'
             )}
           </button>
           <button
@@ -111,14 +111,14 @@ const CartSidebar = ({ onClose }) => {
             disabled={isProcessing || items.length === 0}
             className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold text-base hover:bg-orange-600 transition-all duration-300 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Save as Credit
+            Simpan sebagai Kredit
           </button>
           {items.length > 0 && (
              <button
                 onClick={clearCart}
                 className="w-full bg-red-100 text-red-600 py-2 rounded-lg font-semibold text-sm hover:bg-red-200 transition-colors"
               >
-              Clear Cart
+              Kosongkan Keranjang
             </button>
           )}
         </div>

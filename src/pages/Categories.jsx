@@ -26,7 +26,7 @@ const Categories = () => {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
-      toast.error('Failed to fetch categories');
+      toast.error('Gagal memuat kategori');
       setCategories([]);
       setPagination(null);
     } finally {
@@ -61,16 +61,16 @@ const Categories = () => {
       // Refresh categories from API after deletion
       await fetchCategories(currentPage);
       
-      toast.success('Category deleted successfully');
+      toast.success('Kategori berhasil dihapus');
       setDeleteModal({ isOpen: false, category: null });
     } catch (error) {
       console.error('Error deleting category:', error);
       
       // Handle specific error cases
       if (error.response?.status === 409 && error.response?.data?.code === 'CATEGORY_IN_USE') {
-        toast.error('Cannot delete category as it is being used by products');
+        toast.error('Tidak dapat menghapus kategori karena masih digunakan oleh produk');
       } else if (error.response?.status === 404) {
-        toast.error('Category not found. It may have already been deleted.');
+        toast.error('Kategori tidak ditemukan. Mungkin sudah dihapus.');
         // Refresh the list to remove the non-existent category
         await fetchCategories(currentPage);
       } else {
@@ -108,15 +108,15 @@ const Categories = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Categories</h1>
-            <p className="text-gray-600">Organize your products by categories</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Kategori</h1>
+            <p className="text-gray-600">Atur produk Anda berdasarkan kategori</p>
           </div>
           <button 
             onClick={handleAddCategory}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Category</span>
+            <span>Tambah Kategori</span>
           </button>
         </div>
 
@@ -128,7 +128,7 @@ const Categories = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-900">{categories.length}</h3>
-              <p className="text-sm text-gray-600">Total Categories</p>
+              <p className="text-sm text-gray-600">Total Kategori</p>
             </div>
           </div>
         </div>
@@ -139,13 +139,13 @@ const Categories = () => {
           <div className="text-gray-400 mb-4">
             <Leaf className="w-16 h-16 mx-auto" />
           </div>
-          <p className="text-gray-600 mb-4">No categories found</p>
+          <p className="text-gray-600 mb-4">Tidak ada kategori ditemukan</p>
           <button
             onClick={handleAddCategory}
             className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 mx-auto"
           >
             <Plus className="w-5 h-5" />
-            <span>Create Your First Category</span>
+            <span>Buat Kategori Pertama Anda</span>
           </button>
         </div>
       ) : (
@@ -164,14 +164,14 @@ const Categories = () => {
                     <button
                       onClick={() => handleEditCategory(category)}
                       className="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-md hover:bg-blue-50"
-                      title="Edit category"
+                      title="Edit kategori"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteCategory(category)}
                       className="text-red-600 hover:text-red-800 transition-colors p-1 rounded-md hover:bg-red-50"
-                      title="Delete category"
+                      title="Hapus kategori"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -187,7 +187,7 @@ const Categories = () => {
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <p className="text-xs text-gray-500">
-                    Created {new Date(category.created_at).toLocaleDateString()}
+                    Dibuat {new Date(category.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -196,7 +196,7 @@ const Categories = () => {
           {pagination && pagination.total > 0 && (
             <div className="flex items-center justify-between mt-6">
               <span className="text-sm text-gray-700">
-                Page {pagination.page} of {pagination.totalPages} (Total: {pagination.total} items)
+                Halaman {pagination.page} dari {pagination.totalPages} (Total: {pagination.total} item)
               </span>
               <div className="flex items-center space-x-2">
                 <button
@@ -231,7 +231,7 @@ const Categories = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Delete Category
+              Hapus Kategori
             </h3>
             <div className="flex items-center space-x-3 mb-4">
               <div
@@ -243,20 +243,20 @@ const Categories = () => {
               <span className="font-medium text-gray-900">{deleteModal.category?.name}</span>
             </div>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this category? This action cannot be undone and will affect any products using this category.
+              Apakah Anda yakin ingin menghapus kategori ini? Tindakan ini tidak dapat dibatalkan dan akan mempengaruhi produk yang menggunakan kategori ini.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={cancelDelete}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                Cancel
+                Batal
               </button>
               <button
                 onClick={confirmDelete}
                 className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
               >
-                Delete
+                Hapus
               </button>
             </div>
           </div>

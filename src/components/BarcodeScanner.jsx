@@ -50,7 +50,7 @@ const BarcodeScanner = ({ onScan, onClose }) => {
       setIsScanning(true);
     } catch (err) {
       console.error("Failed to start scanner:", err);
-      toast.error("Failed to start scanner. Please try again.");
+      toast.error("Gagal memulai pemindai. Silakan coba lagi.");
       setIsScanning(false);
     }
   }, [onScan, onClose]);
@@ -90,11 +90,11 @@ const BarcodeScanner = ({ onScan, onClose }) => {
           setSelectedCameraId(defaultCameraId);
           await startScanner(defaultCameraId);
         } else {
-          toast.error("No cameras found.");
+          toast.error("Tidak ada kamera yang ditemukan.");
         }
       } catch (err) {
         console.error("Failed to initialize scanner:", err);
-        toast.error("Failed to access camera. Please check permissions.");
+        toast.error("Gagal mengakses kamera. Silakan periksa izin.");
       }
     };
 
@@ -129,7 +129,7 @@ const BarcodeScanner = ({ onScan, onClose }) => {
         <button
           onClick={switchCamera}
           className="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg hover:bg-gray-50 transition-colors"
-          title="Switch Camera"
+          title="Ganti Kamera"
         >
           <Camera className="w-5 h-5 text-gray-700" />
         </button>
@@ -137,13 +137,13 @@ const BarcodeScanner = ({ onScan, onClose }) => {
       
       {/* Scanner Status */}
       <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-        {isScanning ? 'Scanning...' : 'Starting camera...'}
+        {isScanning ? 'Memindai...' : 'Memulai kamera...'}
       </div>
       
       {/* Camera Info */}
       {cameras.length > 1 && selectedCameraId && (
         <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-          Camera {cameras.findIndex(c => c.id === selectedCameraId) + 1}/{cameras.length}
+          Kamera {cameras.findIndex(c => c.id === selectedCameraId) + 1}/{cameras.length}
         </div>
       )}
     </div>

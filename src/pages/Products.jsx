@@ -42,8 +42,8 @@ const Products = () => {
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      setError('Failed to fetch products from server');
-      toast.error('Failed to fetch products');
+      setError('Gagal memuat produk dari server');
+      toast.error('Gagal memuat produk');
       setProducts([]);
       setPagination(null);
     } finally {
@@ -64,7 +64,7 @@ const Products = () => {
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
-      toast.error('Failed to fetch categories');
+      toast.error('Gagal memuat kategori');
       setCategories([]); // Clear categories on error
     }
   }, []);
@@ -81,7 +81,7 @@ const Products = () => {
   const handleRefresh = () => {
     setRefreshing(true);
     fetchProducts(currentPage, selectedCategory, searchTerm).finally(() => setRefreshing(false));
-    toast.success('Data refreshed successfully');
+    toast.success('Data berhasil diperbarui');
   };
 
   const handlePageChange = (newPage) => {
@@ -98,7 +98,7 @@ const Products = () => {
 
   const getCategoryName = (categoryId) => {
     const category = categories.find(cat => cat.id === categoryId);
-    return category ? category.name : 'Unknown';
+    return category ? category.name : 'Tidak Diketahui';
   };
 
   const getCategoryColor = (categoryId) => {
@@ -133,16 +133,16 @@ const Products = () => {
       // Refresh data from API after deletion maintaining current state
       await fetchProducts(currentPage, selectedCategory, searchTerm);
       
-      toast.success('Product deleted successfully');
+      toast.success('Produk berhasil dihapus');
       setDeleteModal({ isOpen: false, product: null });
     } catch (error) {
       console.error('Error deleting product:', error);
       
       // Handle specific error cases
       if (error.response?.status === 409 && error.response?.data?.code === 'PRODUCT_IN_USE') {
-        toast.error('Cannot delete product as it is referenced in sales records');
+        toast.error('Tidak dapat menghapus produk karena masih digunakan dalam catatan penjualan');
       } else if (error.response?.status === 404) {
-        toast.error('Product not found. It may have already been deleted.');
+        toast.error('Produk tidak ditemukan. Mungkin sudah dihapus.');
         // Refresh the list to remove the non-existent product
         await fetchProducts(currentPage, selectedCategory, searchTerm);
       } else {
@@ -169,7 +169,7 @@ const Products = () => {
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading products from server...</p>
+          <p className="text-gray-600">Memuat produk dari server...</p>
         </div>
       </div>
     );
@@ -181,14 +181,14 @@ const Products = () => {
         <div className="text-center">
           <div className="text-red-500 mb-4">
             <Package className="w-16 h-16 mx-auto mb-2" />
-            <p className="text-lg font-medium">Error Loading Products</p>
+            <p className="text-lg font-medium">Gagal Memuat Produk</p>
             <p className="text-sm">{error}</p>
           </div>
           <button
             onClick={() => fetchProducts()}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
           >
-            Try Again
+            Coba Lagi
           </button>
         </div>
       </div>
@@ -200,8 +200,8 @@ const Products = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
         <div className="mb-4 md:mb-0">
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-sm text-gray-600">Manage your product inventory</p>
+          <h1 className="text-2xl font-bold text-gray-900">Produk</h1>
+          <p className="text-sm text-gray-600">Kelola inventaris produk Anda</p>
         </div>
         <div className="flex items-center space-x-2">
           <button
@@ -210,14 +210,14 @@ const Products = () => {
             className="bg-blue-100 text-blue-600 px-3 py-2 rounded-xl hover:bg-blue-200 transition-colors flex items-center space-x-1 disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
+            <span>Perbarui</span>
           </button>
           <button
             onClick={handleAddProduct}
             className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors flex items-center space-x-1"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Product</span>
+            <span>Tambah Produk</span>
           </button>
         </div>
       </div>
@@ -229,7 +229,7 @@ const Products = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
-              placeholder="Search products by name or barcode..."
+              placeholder="Cari produk berdasarkan nama atau barcode..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -243,7 +243,7 @@ const Products = () => {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
-              <option value="all">All Categories</option>
+              <option value="all">Semua Kategori</option>
               {categories.map(category => (
                 <option key={category.id} value={category.id}>
                   {category.name}
@@ -262,8 +262,8 @@ const Products = () => {
           </div>
           <p className="text-gray-600 mb-4">
             {searchTerm || selectedCategory !== 'all'
-              ? 'No products found matching your criteria'
-              : 'No products found in database'
+              ? 'Tidak ada produk yang sesuai dengan kriteria Anda'
+              : 'Tidak ada produk ditemukan dalam database'
             }
           </p>
           {!searchTerm && selectedCategory === 'all' && (
@@ -272,7 +272,7 @@ const Products = () => {
               className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center space-x-2 mx-auto"
             >
               <Plus className="w-5 h-5" />
-              <span>Add Your First Product</span>
+              <span>Tambah Produk Pertama Anda</span>
             </button>
           )}
         </div>
@@ -294,7 +294,7 @@ const Products = () => {
       {pagination && pagination.total > 0 && (
         <div className="flex items-center justify-between p-4 mt-4 bg-white rounded-xl shadow-sm border border-gray-200">
           <span className="text-sm text-gray-700">
-            Page {pagination.page} of {pagination.totalPages} (Total: {pagination.total} items)
+            Halaman {pagination.page} dari {pagination.totalPages} (Total: {pagination.total} item)
           </span>
           <div className="flex items-center space-x-2">
             <button
@@ -320,23 +320,23 @@ const Products = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Delete Product
+              Hapus Produk
             </h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete "{deleteModal.product?.name}"? This action cannot be undone.
+              Apakah Anda yakin ingin menghapus "{deleteModal.product?.name}"? Tindakan ini tidak dapat dibatalkan.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={cancelDelete}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                Cancel
+                Batal
               </button>
               <button
                 onClick={confirmDelete}
                 className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
               >
-                Delete
+                Hapus
               </button>
             </div>
           </div>
