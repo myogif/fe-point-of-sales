@@ -271,17 +271,35 @@ const AddProductForm = () => {
         serviceWorkerController: !!navigator.serviceWorker?.controller
       });
       
+      // Get detailed error information from backend
+      const errorData = error.response?.data;
+      const errorDetails = errorData?.details || error.message;
+      const errorCode = errorData?.code || error.code;
+      const errorName = errorData?.errorName || error.name;
+      
+      // Show detailed error in alert for debugging (as requested)
+      alert(`Upload Error Details:
+Error: ${errorDetails}
+Code: ${errorCode}
+Name: ${errorName}
+Status: ${error.response?.status || 'No response'}
+Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
+      
       // Enhanced error messages for different scenarios
       if (error.response?.status === 413) {
         toast.error('Image file is too large. Please choose a smaller image.');
       } else if (error.response?.status === 400) {
-        toast.error('Invalid image format. Please choose a valid image file.');
+        toast.error(`Invalid request: ${errorDetails}`);
       } else if (error.response?.status === 401) {
         toast.error('Authentication failed. Please login again.');
       } else if (error.code === 'NETWORK_ERROR' || !error.response) {
         toast.error('Network error. Please check your connection and try again.');
+      } else if (errorDetails.includes('R2')) {
+        toast.error(`Storage error: ${errorDetails}`);
+      } else if (errorDetails.includes('environment variable')) {
+        toast.error('Server configuration error. Please contact support.');
       } else {
-        toast.error(`Failed to upload image: ${error.message || 'Unknown error'}`);
+        toast.error(`Upload failed: ${errorDetails}`);
       }
     } finally {
       setImageUploading(false);

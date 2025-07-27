@@ -1,15 +1,45 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:3001/api'
-  : 'https://be-point-of-sales.vercel.app/api';
+// Get the current host for mobile compatibility
+const getApiBaseUrl = () => {
+  if (process.env.NODE_ENV === 'development') {
+    // Check if we're on mobile by looking at the hostname
+    const hostname = window.location.hostname;
+    
+    // If accessing via IP address (mobile), use the same IP for API
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return `http://${hostname}:3001/api`;
+    }
+    
+    // Default localhost for desktop development
+    return 'http://localhost:3001/api';
+  }
+  
+  // Production URL
+  return 'https://be-point-of-sales.vercel.app/api';
+};
 
-// Create axios instance
+const API_BASE_URL = getApiBaseUrl();
+
+// Create axios instance with mobile-friendly configuration
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  // Mobile-specific timeout and retry settings
+  timeout: 30000, // 30 seconds
+  // Add network debugging
+  transformRequest: [function (data, headers) {
+    console.log('📡 API Request:', {
+      baseURL: API_BASE_URL,
+      url: headers.url,
+      method: headers.method,
+      isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+      networkStatus: navigator.onLine
+    });
+    return data;
+  }, ...axios.defaults.transformRequest]
 });
 
 // Add auth token to requests
