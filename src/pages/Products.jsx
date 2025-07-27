@@ -71,8 +71,8 @@ const Products = () => {
 
   // Initial data fetch
   useEffect(() => {
-    fetchProducts(currentPage, selectedCategory, searchTerm);
-  }, [fetchProducts, currentPage, selectedCategory, searchTerm]);
+    fetchProducts(currentPage, selectedCategory, '');
+  }, [fetchProducts, currentPage, selectedCategory]);
 
   useEffect(() => {
     fetchCategories();
@@ -88,6 +88,12 @@ const Products = () => {
     if (newPage > 0 && newPage <= pagination.totalPages) {
       setCurrentPage(newPage);
     }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setCurrentPage(1);
+    fetchProducts(1, selectedCategory, searchTerm);
   };
 
   const getCategoryName = (categoryId) => {
@@ -219,7 +225,7 @@ const Products = () => {
       {/* Search and Filter */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
+          <form onSubmit={handleSearchSubmit} className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
@@ -228,7 +234,7 @@ const Products = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-          </div>
+          </form>
           
           <div className="flex items-center space-x-2">
             <Filter className="w-5 h-5 text-gray-400" />

@@ -687,7 +687,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="text-2xl font-bold text-gray-900">
-          {isEditMode ? 'Edit Product' : 'Add New Product'}
+          {isEditMode ? 'Edit Produk' : 'Tambah Produk Baru'}
         </h1>
       </div>
 
@@ -696,7 +696,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
           {/* Category */}
           <div>
             <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-1">
-              Category *
+              Kategori *
             </label>
             <select
               id="category_id"
@@ -706,7 +706,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
               className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               required
             >
-              <option value="">Select a category</option>
+              <option value="">Pilih kategori</option>
               {categories.map(category => (
                 <option key={category.id} value={category.id}>
                   {category.name}
@@ -718,7 +718,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
           {/* Product Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              Product Name *
+              Nama Produk *
             </label>
             <input
               type="text"
@@ -727,7 +727,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
               value={formData.name}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter product name"
+              placeholder="Masukkan nama produk"
               required
             />
           </div>
@@ -735,7 +735,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
           {/* Description */}
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-              Description
+              Deskripsi
             </label>
             <textarea
               id="description"
@@ -744,7 +744,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
               onChange={handleChange}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter product description"
+              placeholder="Masukkan deskripsi produk"
             />
           </div>
 
@@ -762,7 +762,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
                   value={formData.barcode}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Auto-generated if empty"
+                  placeholder="Otomatis dibuat jika kosong"
                   maxLength={13}
                 />
                 <button
@@ -778,18 +778,18 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
                 onClick={generateBarcode}
                 className="px-3 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
               >
-                Generate
+                Buat
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Leave empty to auto-generate on save
+              Kosongkan untuk dibuat otomatis saat menyimpan
             </p>
           </div>
 
           {/* Unit Type */}
           <div>
             <label htmlFor="unit_type" className="block text-sm font-medium text-gray-700 mb-1">
-              Unit Type *
+              Jenis Satuan *
             </label>
             <select
               id="unit_type"
@@ -799,7 +799,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
               className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               required
             >
-              <option value="pcs">Pieces (pcs)</option>
+              <option value="pcs">Buah (pcs)</option>
               <option value="kg">Kilogram (kg)</option>
               <option value="ons">Ons</option>
               <option value="liter">Liter</option>
@@ -811,7 +811,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
             {/* Price PCS */}
             <div>
               <label htmlFor="price_pcs" className="block text-sm font-medium text-gray-700 mb-1">
-                Price per Piece {formData.unit_type === 'pcs' ? '*' : ''}
+                Harga per Buah {formData.unit_type === 'pcs' ? '*' : ''}
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
@@ -836,7 +836,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
             {/* Price KG */}
             <div>
               <label htmlFor="price_kg" className="block text-sm font-medium text-gray-700 mb-1">
-                Price per KG {formData.unit_type === 'kg' ? '*' : ''}
+                Harga per KG {formData.unit_type === 'kg' ? '*' : ''}
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
@@ -861,7 +861,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
             {/* Price ONS */}
             <div>
               <label htmlFor="price_ons" className="block text-sm font-medium text-gray-700 mb-1">
-                Price per Ons {formData.unit_type === 'ons' ? '*' : ''}
+                Harga per Ons {formData.unit_type === 'ons' ? '*' : ''}
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
@@ -886,7 +886,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
             {/* Price LITER */}
             <div>
               <label htmlFor="price_liter" className="block text-sm font-medium text-gray-700 mb-1">
-                Price per Liter {formData.unit_type === 'liter' ? '*' : ''}
+                Harga per Liter {formData.unit_type === 'liter' ? '*' : ''}
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
@@ -912,7 +912,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
           {/* Stock */}
           <div>
             <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
-              Stock
+              Stok
             </label>
             <input
               type="number"
@@ -931,7 +931,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
           {/* Online Status */}
           <div>
             <label htmlFor="is_online" className="block text-sm font-medium text-gray-700 mb-1">
-              Online Status
+              Status Online
             </label>
             <div className="flex items-center space-x-3">
               <label className="flex items-center cursor-pointer">
@@ -943,7 +943,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
                   onChange={(e) => setFormData(prev => ({ ...prev, is_online: true }))}
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Yes (Available Online)</span>
+                <span className="ml-2 text-sm text-gray-700">Ya (Tersedia Online)</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -954,11 +954,11 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
                   onChange={(e) => setFormData(prev => ({ ...prev, is_online: false }))}
                   className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">No (Store Only)</span>
+                <span className="ml-2 text-sm text-gray-700">Tidak (Hanya Toko)</span>
               </label>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Choose whether this product is available for online sales
+              Pilih apakah produk ini tersedia untuk penjualan online
             </p>
           </div>
 
@@ -966,13 +966,13 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">
-                Product Image
+                Gambar Produk
               </label>
               
               {/* Toggle between Upload and URL */}
               <div className="flex items-center space-x-2">
                 <span className={`text-sm ${imageInputMode === 'upload' ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
-                  Upload
+                  Unggah
                 </span>
                 <button
                   type="button"
@@ -1026,7 +1026,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
                 {imageInputMode === 'upload' ? (
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
                     <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600 mb-2">Upload product image</p>
+                    <p className="text-sm text-gray-600 mb-2">Unggah gambar produk</p>
                     <div className="flex gap-2">
                       <input
                         type="file"
@@ -1043,12 +1043,12 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
                         {imageUploading ? (
                           <>
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                            <span>Uploading...</span>
+                            <span>Mengunggah...</span>
                           </>
                         ) : (
                           <>
                             <Upload className="w-4 h-4" />
-                            <span>Choose</span>
+                            <span>Pilih</span>
                           </>
                         )}
                       </label>
@@ -1066,11 +1066,11 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
                         className="flex-1 inline-flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
                       >
                         <Camera className="w-4 h-4" />
-                        <span>Camera</span>
+                        <span>Kamera</span>
                       </label>
                     </div>
                     <p className="text-xs text-gray-500 mt-2">
-                      Or switch to URL mode to enter an image link
+                      Atau beralih ke mode URL untuk memasukkan tautan gambar
                     </p>
                   </div>
                 ) : (
@@ -1084,14 +1084,14 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
                         value={imageUrlInput}
                         onChange={handleImageUrlChange}
                         onBlur={handleImageUrlBlur}
-                        placeholder="Enter image URL (e.g., https://example.com/image.jpg)"
+                        placeholder="Masukkan URL gambar (contoh: https://contoh.com/gambar.jpg)"
                         className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                       <p className="text-xs text-gray-500 text-center">
-                        Enter a direct link to an image (jpg, png, gif, etc.)
+                        Masukkan tautan langsung ke gambar (jpg, png, gif, dll.)
                       </p>
                       <p className="text-xs text-gray-400 text-center">
-                        Or switch to Upload mode to select a file from your device
+                        Atau beralih ke mode Unggah untuk memilih file dari perangkat Anda
                       </p>
                     </div>
                   </div>
@@ -1112,7 +1112,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
               ) : (
                 <>
                   <Save className="w-5 h-5" />
-                  <span>Save Product</span>
+                  <span>Simpan Produk</span>
                 </>
               )}
             </button>
@@ -1123,7 +1123,7 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
       {isScannerOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl w-full max-w-md mx-auto p-4 relative">
-            <h3 className="text-lg font-semibold mb-4">Scan Barcode</h3>
+            <h3 className="text-lg font-semibold mb-4">Pindai Barcode</h3>
             <button
               onClick={() => setIsScannerOpen(false)}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
