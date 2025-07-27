@@ -31,7 +31,8 @@ const ProductCardNew = ({ product, onEdit, onDelete, getCategoryName, getCategor
         
         {/* Price */}
         <p className="text-green-600 font-bold mb-2">
-          {formatPrice(product.price_pcs || product.price_kg || product.price_ons || 0)}
+          {formatPrice(product[`price_${product.unit_type}`] || product.price_pcs || product.price_kg || product.price_ons || product.price_liter || 0)}
+          <span className="text-xs text-gray-500 ml-1">/{product.unit_type || 'pcs'}</span>
         </p>
         
         {/* Stock */}

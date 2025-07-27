@@ -19,15 +19,27 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors
+// Handle auth errors and other common errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle authentication errors
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    
+    // Handle network errors
+    if (!error.response) {
+      error.message = 'Network error. Please check your connection.';
+    }
+    
+    // Handle server errors
+    if (error.response?.status >= 500) {
+      error.message = 'Server error. Please try again later.';
+    }
+    
     return Promise.reject(error);
   }
 );

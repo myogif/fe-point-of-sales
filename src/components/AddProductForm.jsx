@@ -15,11 +15,14 @@ const AddProductForm = () => {
     category_id: '',
     name: '',
     barcode: '',
+    description: '',
+    unit_type: 'pcs',
+    price_kg: '',
+    price_ons: '',
     price_pcs: '',
-    cost_price: '',
+    price_liter: '',
     stock: '',
     sku: '',
-    unit: 'pcs',
     image_url: ''
   });
   
@@ -59,11 +62,14 @@ const AddProductForm = () => {
             category_id: product.category_id || '',
             name: product.name || '',
             barcode: product.barcode || '',
+            description: product.description || '',
+            unit_type: product.unit_type || 'pcs',
+            price_kg: product.price_kg || '',
+            price_ons: product.price_ons || '',
             price_pcs: product.price_pcs || '',
-            cost_price: product.cost_price || '',
+            price_liter: product.price_liter || '',
             stock: product.stock || '',
             sku: product.sku || '',
-            unit: product.unit || 'pcs',
             image_url: product.image_url || ''
           });
           
@@ -146,8 +152,15 @@ const AddProductForm = () => {
       return;
     }
 
-    if (!formData.price_pcs) {
-      toast.error('Selling price is required');
+    // Validate that at least one price is provided based on unit type
+    const currentPrice = formData[`price_${formData.unit_type}`];
+    if (!currentPrice || parseFloat(currentPrice) <= 0) {
+      toast.error(`Price for ${formData.unit_type} must be greater than 0`);
+      return;
+    }
+
+    if (formData.stock && parseFloat(formData.stock) < 0) {
+      toast.error('Stock cannot be negative');
       return;
     }
 
@@ -161,14 +174,17 @@ const AddProductForm = () => {
       setLoading(true);
       
       const productData = {
-        name: formData.name,
-        barcode: formData.barcode,
+        name: formData.name.trim(),
+        barcode: formData.barcode.trim(),
+        description: formData.description.trim(),
         category_id: formData.category_id,
-        price_pcs: parseFloat(formData.price_pcs) || 0,
-        cost_price: parseFloat(formData.cost_price) || 0,
+        unit_type: formData.unit_type,
+        price_kg: parseFloat(formData.price_kg) || null,
+        price_ons: parseFloat(formData.price_ons) || null,
+        price_pcs: parseFloat(formData.price_pcs) || null,
+        price_liter: parseFloat(formData.price_liter) || null,
         stock: parseFloat(formData.stock) || 0,
-        sku: formData.sku,
-        unit: formData.unit,
+        sku: formData.sku.trim(),
         image_url: formData.image_url
       };
       
@@ -187,10 +203,24 @@ const AddProductForm = () => {
       console.error('Error saving product:', error);
       
       // Handle specific error cases
-      if (error.response?.status === 409 && error.response?.data?.code === 'DUPLICATE_BARCODE') {
-        toast.error(`Product with barcode "${formData.barcode}" already exists. Please use a different barcode.`);
+      if (error.response?.status === 409) {
+        if (error.response?.data?.code === 'DUPLICATE_BARCODE') {
+          toast.error(`Product with barcode "${formData.barcode}" already exists. Please use a different barcode.`);
+        } else {
+          toast.error(error.response?.data?.error || 'Conflict error occurred');
+        }
+      } else if (error.response?.status === 400) {
+        if (error.response?.data?.code === 'INVALID_CATEGORY') {
+          toast.error('Invalid category selected. Please choose a valid category.');
+        } else {
+          const message = error.response?.data?.error || 'Invalid product data';
+          toast.error(message);
+        }
+      } else if (error.response?.status === 404 && isEditMode) {
+        toast.error('Product not found. It may have been deleted.');
+        navigate('/products');
       } else {
-        const message = error.response?.data?.error || 'Failed to save product';
+        const message = error.response?.data?.error || error.message || 'Failed to save product';
         toast.error(message);
       }
     } finally {
@@ -261,6 +291,22 @@ const AddProductForm = () => {
             />
           </div>
 
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter product description"
+            />
+          </div>
+
           {/* Barcode */}
           <div>
             <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 mb-1">
@@ -299,50 +345,122 @@ const AddProductForm = () => {
             </p>
           </div>
 
-          {/* Selling Price */}
+          {/* Unit Type */}
           <div>
-            <label htmlFor="price_pcs" className="block text-sm font-medium text-gray-700 mb-1">
-              Selling Price *
+            <label htmlFor="unit_type" className="block text-sm font-medium text-gray-700 mb-1">
+              Unit Type *
             </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                Rp
-              </span>
-              <input
-                type="number"
-                id="price_pcs"
-                name="price_pcs"
-                value={formData.price_pcs}
-                onChange={handleChange}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="0"
-                min="0"
-                step="100"
-                required
-              />
-            </div>
+            <select
+              id="unit_type"
+              name="unit_type"
+              value={formData.unit_type}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              required
+            >
+              <option value="pcs">Pieces (pcs)</option>
+              <option value="kg">Kilogram (kg)</option>
+              <option value="ons">Ons</option>
+              <option value="liter">Liter</option>
+            </select>
           </div>
 
-          {/* Cost Price */}
-          <div>
-            <label htmlFor="cost_price" className="block text-sm font-medium text-gray-700 mb-1">
-              Cost Price
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                Rp
-              </span>
-              <input
-                type="number"
-                id="cost_price"
-                name="cost_price"
-                value={formData.cost_price}
-                onChange={handleChange}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="0"
-                min="0"
-                step="100"
-              />
+          {/* Dynamic Price Fields */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Price PCS */}
+            <div>
+              <label htmlFor="price_pcs" className="block text-sm font-medium text-gray-700 mb-1">
+                Price per Piece {formData.unit_type === 'pcs' ? '*' : ''}
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                  Rp
+                </span>
+                <input
+                  type="number"
+                  id="price_pcs"
+                  name="price_pcs"
+                  value={formData.price_pcs}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0"
+                  min="0"
+                  step="100"
+                  required={formData.unit_type === 'pcs'}
+                />
+              </div>
+            </div>
+
+            {/* Price KG */}
+            <div>
+              <label htmlFor="price_kg" className="block text-sm font-medium text-gray-700 mb-1">
+                Price per KG {formData.unit_type === 'kg' ? '*' : ''}
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                  Rp
+                </span>
+                <input
+                  type="number"
+                  id="price_kg"
+                  name="price_kg"
+                  value={formData.price_kg}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0"
+                  min="0"
+                  step="100"
+                  required={formData.unit_type === 'kg'}
+                />
+              </div>
+            </div>
+
+            {/* Price ONS */}
+            <div>
+              <label htmlFor="price_ons" className="block text-sm font-medium text-gray-700 mb-1">
+                Price per Ons {formData.unit_type === 'ons' ? '*' : ''}
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                  Rp
+                </span>
+                <input
+                  type="number"
+                  id="price_ons"
+                  name="price_ons"
+                  value={formData.price_ons}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0"
+                  min="0"
+                  step="100"
+                  required={formData.unit_type === 'ons'}
+                />
+              </div>
+            </div>
+
+            {/* Price LITER */}
+            <div>
+              <label htmlFor="price_liter" className="block text-sm font-medium text-gray-700 mb-1">
+                Price per Liter {formData.unit_type === 'liter' ? '*' : ''}
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                  Rp
+                </span>
+                <input
+                  type="number"
+                  id="price_liter"
+                  name="price_liter"
+                  value={formData.price_liter}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0"
+                  min="0"
+                  step="100"
+                  required={formData.unit_type === 'liter'}
+                />
+              </div>
             </div>
           </div>
 
@@ -380,24 +498,6 @@ const AddProductForm = () => {
             />
           </div>
 
-          {/* Unit */}
-          <div>
-            <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">
-              Unit
-            </label>
-            <select
-              id="unit"
-              name="unit"
-              value={formData.unit}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              <option value="pcs">pcs</option>
-              <option value="kg">kg</option>
-              <option value="ons">ons</option>
-              <option value="liter">liter</option>
-            </select>
-          </div>
 
           {/* Image Upload */}
           <div>

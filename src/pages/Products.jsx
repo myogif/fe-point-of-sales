@@ -108,13 +108,24 @@ const Products = () => {
       try {
         await productsAPI.delete(productId);
         
-        // Refresh data from API after deletion instead of local filtering
-        await fetchProducts(false);
+        // Refresh data from API after deletion maintaining current state
+        await fetchProducts(currentPage, selectedCategory, searchTerm);
         
         toast.success('Product deleted successfully');
       } catch (error) {
-        const message = error.response?.data?.error || 'Failed to delete product';
-        toast.error(message);
+        console.error('Error deleting product:', error);
+        
+        // Handle specific error cases
+        if (error.response?.status === 409 && error.response?.data?.code === 'PRODUCT_IN_USE') {
+          toast.error('Cannot delete product as it is referenced in sales records');
+        } else if (error.response?.status === 404) {
+          toast.error('Product not found. It may have already been deleted.');
+          // Refresh the list to remove the non-existent product
+          await fetchProducts(currentPage, selectedCategory, searchTerm);
+        } else {
+          const message = error.response?.data?.error || error.message || 'Failed to delete product';
+          toast.error(message);
+        }
       }
     }
   };
