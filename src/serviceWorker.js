@@ -1,7 +1,7 @@
 // This service worker can be customized further as needed
 // See https://developers.google.com/web/tools/workbox/
 
-const SW_VERSION = '1.0.1';
+const SW_VERSION = '1.0.2';
 console.log(`🔧 Service Worker ${SW_VERSION} installing...`);
 
 self.addEventListener('install', (event) => {
@@ -105,9 +105,20 @@ self.addEventListener('fetch', (event) => {
       userAgent: userAgent.substring(0, 100) + '...'
     });
     
-    // For mobile uploads, bypass service worker completely
-    if (isMobile && isUpload) {
-      console.log('📱 Mobile upload detected - bypassing service worker');
+    // Enhanced bypass logic for mobile uploads
+    const shouldBypass = (isMobile && isUpload) ||
+                        bypassRequests.has(url) ||
+                        bypassRequests.has('/api/upload/image') ||
+                        bypassRequests.has('ALL_UPLOADS') ||
+                        event.request.headers.get('x-bypass-sw') === 'true';
+    
+    if (shouldBypass) {
+      console.log('📱 Mobile upload detected - bypassing service worker completely', {
+        isMobile,
+        isUpload,
+        bypassRequests: Array.from(bypassRequests),
+        url
+      });
       return; // Let the request go directly to network
     }
     
@@ -163,10 +174,34 @@ self.addEventListener('fetch', (event) => {
     console.log('🔍 SW not handling request:', { url, method, destination });
   }
 });
+// Track bypass requests for mobile uploads
+let bypassRequests = new Set();
+
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
 self.addEventListener('message', (event) => {
+  console.log('📦 Service Worker: Received message:', event.data);
+  
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('📦 Service Worker: Skipping waiting');
     self.skipWaiting();
+  } else if (event.data && event.data.type === 'BYPASS_NEXT_REQUEST') {
+    console.log('📱 Service Worker: Adding bypass for:', event.data.url);
+    bypassRequests.add(event.data.url);
+    bypassRequests.add('/api/upload/image'); // Add generic bypass
+    
+    // Auto-remove bypass after 60 seconds
+    setTimeout(() => {
+      bypassRequests.delete(event.data.url);
+      bypassRequests.delete('/api/upload/image');
+    }, 60000);
+  } else if (event.data && event.data.type === 'BYPASS_ALL_UPLOADS') {
+    console.log('📱 Service Worker: Bypassing all upload requests');
+    bypassRequests.add('ALL_UPLOADS');
+    
+    // Auto-remove bypass after 60 seconds
+    setTimeout(() => {
+      bypassRequests.delete('ALL_UPLOADS');
+    }, 60000);
   }
 });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Camera, Save, Upload, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Camera, Save, Upload, Image as ImageIcon, Link, ToggleLeft, ToggleRight } from 'lucide-react';
 import { productsAPI, categoriesAPI, uploadAPI } from '../services/api';
 import BarcodeScanner from './BarcodeScanner';
 import toast from 'react-hot-toast';
@@ -31,6 +31,8 @@ const AddProductForm = () => {
   const [imagePreview, setImagePreview] = useState('');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditMode);
+  const [imageInputMode, setImageInputMode] = useState('upload'); // 'upload' or 'url'
+  const [imageUrlInput, setImageUrlInput] = useState('');
 
   // Fetch categories
   useEffect(() => {
@@ -89,6 +91,40 @@ const AddProductForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // URL validation function
+  const isValidImageUrl = (url) => {
+    if (!url) return false;
+    try {
+      new URL(url);
+      // Check if URL ends with common image extensions
+      const imageExtensions = /\.(jpg|jpeg|png|gif|bmp|webp|svg)(\?.*)?$/i;
+      return imageExtensions.test(url) || url.includes('imgur.com') || url.includes('cloudinary.com') || url.includes('amazonaws.com');
+    } catch {
+      return false;
+    }
+  };
+
+  // Handle image URL input
+  const handleImageUrlChange = (e) => {
+    const url = e.target.value;
+    setImageUrlInput(url);
+    
+    if (url && isValidImageUrl(url)) {
+      setFormData(prev => ({ ...prev, image_url: url }));
+      setImagePreview(url);
+    } else if (!url) {
+      setFormData(prev => ({ ...prev, image_url: '' }));
+      setImagePreview('');
+    }
+  };
+
+  // Handle image URL validation on blur
+  const handleImageUrlBlur = () => {
+    if (imageUrlInput && !isValidImageUrl(imageUrlInput)) {
+      toast.error('Please enter a valid image URL (jpg, png, gif, etc.)');
+    }
   };
 
   const handleImageUpload = async (e) => {
@@ -168,28 +204,84 @@ const AddProductForm = () => {
       let retryCount = 0;
       const maxRetries = isMobile ? 5 : 3; // More retries for mobile
       
-      // Mobile-specific upload strategy
-      const uploadStrategies = isMobile ? [
-        // Strategy 1: Direct upload bypassing service worker
-        async () => {
-          console.log('📱 Strategy 1: Direct upload (bypassing SW)');
-          if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            // Temporarily unregister service worker for this request
+      // Network connectivity test
+      const testNetworkConnectivity = async () => {
+        const token = localStorage.getItem('auth_token');
+        const hostname = window.location.hostname;
+        const testUrl = hostname !== 'localhost' && hostname !== '127.0.0.1'
+          ? `http://${hostname}:3001/api/auth/verify`
+          : 'http://localhost:3001/api/auth/verify';
+        
+        try {
+          console.log('🌐 Testing network connectivity to:', testUrl);
+          const response = await fetch(testUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            timeout: 5000,
+            cache: 'no-cache',
+            mode: 'cors'
+          });
+          
+          console.log('🌐 Network test result:', {
+            status: response.status,
+            ok: response.ok,
+            statusText: response.statusText
+          });
+          
+          return response.ok;
+        } catch (error) {
+          console.error('🌐 Network connectivity test failed:', error);
+          return false;
+        }
+      };
+
+      // Complete service worker bypass for mobile
+      const bypassServiceWorker = async () => {
+        if ('serviceWorker' in navigator && isMobile) {
+          try {
             const registration = await navigator.serviceWorker.getRegistration();
-            if (registration) {
-              console.log('📱 Temporarily bypassing service worker');
+            if (registration && registration.active) {
+              console.log('📱 Sending bypass message to service worker');
+              
+              // Send multiple bypass messages for better coverage
+              const messages = [
+                { type: 'BYPASS_NEXT_REQUEST', url: '/api/upload/image' },
+                { type: 'BYPASS_ALL_UPLOADS' }
+              ];
+              
+              for (const message of messages) {
+                if (registration.active.postMessage) {
+                  registration.active.postMessage(message);
+                  console.log('📱 Sent SW message:', message);
+                }
+              }
+              
+              // Wait for the messages to be processed
+              await new Promise(resolve => setTimeout(resolve, 200));
             }
+          } catch (error) {
+            console.warn('📱 Could not communicate with service worker:', error);
           }
-          return uploadAPI.uploadImage(formDataUpload);
-        },
-        // Strategy 2: Standard upload
+        }
+      };
+
+      // Mobile-specific upload strategy with enhanced network handling
+      const uploadStrategies = isMobile ? [
+        // Strategy 1: Complete service worker bypass with network test
         async () => {
-          console.log('📱 Strategy 2: Standard upload');
-          return uploadAPI.uploadImage(formDataUpload);
-        },
-        // Strategy 3: Fetch API direct call with full URL
-        async () => {
-          console.log('📱 Strategy 3: Direct fetch API');
+          console.log('📱 Strategy 1: Network test + SW bypass + Direct fetch');
+          
+          // Test network connectivity first
+          const networkOk = await testNetworkConnectivity();
+          if (!networkOk) {
+            throw new Error('Network connectivity test failed - server may be unreachable');
+          }
+          
+          // Bypass service worker
+          await bypassServiceWorker();
+          
           const token = localStorage.getItem('auth_token');
           const hostname = window.location.hostname;
           const apiUrl = hostname !== 'localhost' && hostname !== '127.0.0.1'
@@ -198,23 +290,99 @@ const AddProductForm = () => {
           
           console.log('📱 Using direct API URL:', apiUrl);
           
-          return fetch(apiUrl, {
-            method: 'POST',
-            body: formDataUpload,
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              // Don't set Content-Type for FormData, let browser set it with boundary
-            },
-            cache: 'no-cache',
-            mode: 'cors'
-          }).then(res => {
-            console.log('📱 Direct fetch response:', {
-              status: res.status,
-              statusText: res.statusText,
-              ok: res.ok
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+          
+          try {
+            const response = await fetch(apiUrl, {
+              method: 'POST',
+              body: formDataUpload,
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+              cache: 'no-cache',
+              mode: 'cors',
+              signal: controller.signal
             });
-            if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-            return res.json().then(data => ({ data }));
+            
+            clearTimeout(timeoutId);
+            
+            console.log('📱 Direct fetch response:', {
+              status: response.status,
+              statusText: response.statusText,
+              ok: response.ok,
+              headers: Object.fromEntries(response.headers.entries())
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+            }
+            
+            const data = await response.json();
+            return { data };
+          } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+              throw new Error('Upload timeout - request took too long');
+            }
+            throw error;
+          }
+        },
+        // Strategy 2: Standard API with service worker bypass
+        async () => {
+          console.log('📱 Strategy 2: SW bypass + Standard API');
+          await bypassServiceWorker();
+          return uploadAPI.uploadImage(formDataUpload);
+        },
+        // Strategy 3: Standard upload without modifications
+        async () => {
+          console.log('📱 Strategy 3: Standard upload');
+          return uploadAPI.uploadImage(formDataUpload);
+        },
+        // Strategy 4: XMLHttpRequest fallback
+        async () => {
+          console.log('📱 Strategy 4: XMLHttpRequest fallback');
+          return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const token = localStorage.getItem('auth_token');
+            const hostname = window.location.hostname;
+            const apiUrl = hostname !== 'localhost' && hostname !== '127.0.0.1'
+              ? `http://${hostname}:3001/api/upload/image`
+              : 'http://localhost:3001/api/upload/image';
+            
+            xhr.open('POST', apiUrl, true);
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+            xhr.timeout = 30000; // 30 second timeout
+            
+            xhr.onload = function() {
+              console.log('📱 XMLHttpRequest response:', {
+                status: xhr.status,
+                statusText: xhr.statusText,
+                responseText: xhr.responseText.substring(0, 200)
+              });
+              
+              if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                  const data = JSON.parse(xhr.responseText);
+                  resolve({ data });
+                } catch (parseError) {
+                  reject(new Error('Failed to parse response JSON'));
+                }
+              } else {
+                reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+              }
+            };
+            
+            xhr.onerror = function() {
+              reject(new Error('XMLHttpRequest network error'));
+            };
+            
+            xhr.ontimeout = function() {
+              reject(new Error('XMLHttpRequest timeout'));
+            };
+            
+            xhr.send(formDataUpload);
           });
         }
       ] : [
@@ -281,7 +449,14 @@ const AddProductForm = () => {
         code: error.code,
         stack: error.stack,
         isPWA: window.matchMedia('(display-mode: standalone)').matches,
-        serviceWorkerController: !!navigator.serviceWorker?.controller
+        serviceWorkerController: !!navigator.serviceWorker?.controller,
+        networkStatus: navigator.onLine,
+        userAgent: navigator.userAgent,
+        connection: navigator.connection ? {
+          effectiveType: navigator.connection.effectiveType,
+          downlink: navigator.connection.downlink,
+          rtt: navigator.connection.rtt
+        } : 'not available'
       });
       
       // Get detailed error information from backend
@@ -290,21 +465,49 @@ const AddProductForm = () => {
       const errorCode = errorData?.code || error.code;
       const errorName = errorData?.errorName || error.name;
       
+      // Enhanced debugging for "Failed to fetch" errors
+      let debugInfo = '';
+      if (error.message === 'Failed to fetch' || error.message.includes('fetch')) {
+        debugInfo = `
+Network Debug Info:
+- Online Status: ${navigator.onLine}
+- Service Worker: ${!!navigator.serviceWorker?.controller}
+- PWA Mode: ${window.matchMedia('(display-mode: standalone)').matches}
+- User Agent: ${navigator.userAgent.substring(0, 100)}
+- Connection: ${navigator.connection ? navigator.connection.effectiveType : 'unknown'}
+- Current URL: ${window.location.href}
+- API Base: ${window.location.hostname !== 'localhost' ? `http://${window.location.hostname}:3001` : 'http://localhost:3001'}
+
+Troubleshooting Steps:
+1. Check if backend server is running on port 3001
+2. Verify mobile device can access the server IP
+3. Check firewall/network settings
+4. Try refreshing the PWA
+5. Clear browser cache and service worker`;
+      }
+      
       // Show detailed error in alert for debugging (as requested)
       alert(`Upload Error Details:
 Error: ${errorDetails}
 Code: ${errorCode}
 Name: ${errorName}
 Status: ${error.response?.status || 'No response'}
+${debugInfo}
 Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
       
       // Enhanced error messages for different scenarios
-      if (error.response?.status === 413) {
+      if (error.message === 'Failed to fetch') {
+        toast.error('Network connection failed. Please check if the server is accessible and try again.');
+      } else if (error.message.includes('timeout') || error.message.includes('abort')) {
+        toast.error('Upload timeout. Please check your connection and try again.');
+      } else if (error.response?.status === 413) {
         toast.error('Image file is too large. Please choose a smaller image.');
       } else if (error.response?.status === 400) {
         toast.error(`Invalid request: ${errorDetails}`);
       } else if (error.response?.status === 401) {
         toast.error('Authentication failed. Please login again.');
+      } else if (error.response?.status === 405) {
+        toast.error('Method not allowed. Server configuration issue.');
       } else if (error.code === 'NETWORK_ERROR' || !error.response) {
         toast.error('Network error. Please check your connection and try again.');
       } else if (errorDetails.includes('R2')) {
@@ -705,24 +908,59 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
 
 
 
-          {/* Image Upload */}
+          {/* Image Upload/URL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Image
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Product Image
+              </label>
+              
+              {/* Toggle between Upload and URL */}
+              <div className="flex items-center space-x-2">
+                <span className={`text-sm ${imageInputMode === 'upload' ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+                  Upload
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImageInputMode(imageInputMode === 'upload' ? 'url' : 'upload');
+                    // Clear current image when switching modes
+                    setImagePreview('');
+                    setFormData(prev => ({ ...prev, image_url: '' }));
+                    setImageUrlInput('');
+                  }}
+                  className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  {imageInputMode === 'upload' ? (
+                    <ToggleLeft className="w-6 h-6 text-gray-400" />
+                  ) : (
+                    <ToggleRight className="w-6 h-6 text-blue-600" />
+                  )}
+                </button>
+                <span className={`text-sm ${imageInputMode === 'url' ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+                  URL
+                </span>
+              </div>
+            </div>
             
             {imagePreview ? (
               <div className="relative">
-                <img 
-                  src={imagePreview} 
+                <img
+                  src={imagePreview}
                   alt="Product preview"
                   className="w-full h-48 object-cover rounded-xl border border-gray-300"
+                  onError={() => {
+                    toast.error('Failed to load image. Please check the URL or try a different image.');
+                    setImagePreview('');
+                    setFormData(prev => ({ ...prev, image_url: '' }));
+                  }}
                 />
                 <button
                   type="button"
                   onClick={() => {
                     setImagePreview('');
                     setFormData(prev => ({ ...prev, image_url: '' }));
+                    setImageUrlInput('');
                   }}
                   className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                 >
@@ -730,52 +968,81 @@ Debug Info: ${JSON.stringify(errorData?.debug || {}, null, 2)}`);
                 </button>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
-                <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 mb-2">Upload product image</p>
-                <div className="flex gap-2">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    id="image-upload-file"
-                    disabled={imageUploading}
-                  />
-                  <label
-                    htmlFor="image-upload-file"
-                    className="flex-1 inline-flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
-                  >
-                    {imageUploading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                        <span>Uploading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4" />
-                        <span>Choose</span>
-                      </>
-                    )}
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    id="image-upload-camera"
-                    disabled={imageUploading}
-                  />
-                  <label
-                    htmlFor="image-upload-camera"
-                    className="flex-1 inline-flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span>Camera</span>
-                  </label>
-                </div>
-              </div>
+              <>
+                {imageInputMode === 'upload' ? (
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+                    <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 mb-2">Upload product image</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload-file"
+                        disabled={imageUploading}
+                      />
+                      <label
+                        htmlFor="image-upload-file"
+                        className="flex-1 inline-flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+                      >
+                        {imageUploading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                            <span>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            <span>Choose</span>
+                          </>
+                        )}
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload-camera"
+                        disabled={imageUploading}
+                      />
+                      <label
+                        htmlFor="image-upload-camera"
+                        className="flex-1 inline-flex items-center justify-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer"
+                      >
+                        <Camera className="w-4 h-4" />
+                        <span>Camera</span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Or switch to URL mode to enter an image link
+                    </p>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6">
+                    <div className="flex items-center justify-center mb-4">
+                      <Link className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <div className="space-y-3">
+                      <input
+                        type="url"
+                        value={imageUrlInput}
+                        onChange={handleImageUrlChange}
+                        onBlur={handleImageUrlBlur}
+                        placeholder="Enter image URL (e.g., https://example.com/image.jpg)"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <p className="text-xs text-gray-500 text-center">
+                        Enter a direct link to an image (jpg, png, gif, etc.)
+                      </p>
+                      <p className="text-xs text-gray-400 text-center">
+                        Or switch to Upload mode to select a file from your device
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
