@@ -65,7 +65,28 @@ const BarcodeScanner = ({ onScan, onClose }) => {
         setCameras(availableCameras);
         
         if (availableCameras && availableCameras.length > 0) {
-          const defaultCameraId = availableCameras[0].id;
+          // Try to find rear camera (environment facing) first, otherwise use camera 2 if available, then fallback to first camera
+          let defaultCameraId;
+          
+          // Look for rear camera by label
+          const rearCamera = availableCameras.find(camera =>
+            camera.label && (
+              camera.label.toLowerCase().includes('back') ||
+              camera.label.toLowerCase().includes('rear') ||
+              camera.label.toLowerCase().includes('environment')
+            )
+          );
+          
+          if (rearCamera) {
+            defaultCameraId = rearCamera.id;
+          } else if (availableCameras.length >= 2) {
+            // If no rear camera found by label, use camera 2 (index 1)
+            defaultCameraId = availableCameras[1].id;
+          } else {
+            // Fallback to first camera
+            defaultCameraId = availableCameras[0].id;
+          }
+          
           setSelectedCameraId(defaultCameraId);
           await startScanner(defaultCameraId);
         } else {
