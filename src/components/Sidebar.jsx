@@ -23,17 +23,23 @@ const Sidebar = () => {
   const { logout, user } = useAuth();
   const { isSidebarOpen, toggleSidebar, isCollapsed, toggleCollapse } = useSidebar();
 
-  const menuItems = [
-    // { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: ShoppingCart, label: 'Sales (POS)', path: '/' },
-    // { icon: ShoppingBag, label: 'Purchases', path: '/purchases' },
-    { icon: Package, label: 'Products', path: '/products' },
-    { icon: List, label: 'Categories', path: '/categories' },
-    { icon: ArrowLeftRight, label: 'Transactions', path: '/transactions' },
-    { icon: Users, label: 'Customers', path: '/customers' },
-    { icon: CreditCard, label: 'Credit', path: '/credit' },
-    // { icon: BarChart3, label: 'Reports', path: '/reports' },
+  // Define all menu items with role restrictions
+  const allMenuItems = [
+    // { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['admin'] },
+    { icon: ShoppingCart, label: 'Sales (POS)', path: '/', roles: ['admin', 'cashier'] },
+    // { icon: ShoppingBag, label: 'Purchases', path: '/purchases', roles: ['admin'] },
+    { icon: Package, label: 'Products', path: '/products', roles: ['admin'] },
+    { icon: List, label: 'Categories', path: '/categories', roles: ['admin'] },
+    { icon: ArrowLeftRight, label: 'Transactions', path: '/transactions', roles: ['admin'] },
+    { icon: Users, label: 'Customers', path: '/customers', roles: ['admin'] },
+    { icon: CreditCard, label: 'Credit', path: '/credit', roles: ['admin'] },
+    // { icon: BarChart3, label: 'Reports', path: '/reports', roles: ['admin'] },
   ];
+
+  // Filter menu items based on user role
+  const menuItems = allMenuItems.filter(item =>
+    item.roles.includes(user?.role || 'admin')
+  );
 
   return (
     <aside
@@ -97,20 +103,23 @@ const Sidebar = () => {
               )}
             </div>
         </div>
-        <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              `flex items-center mt-2 py-2 px-3 rounded-lg transition-colors duration-200 ${
-                isActive
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-600 hover:bg-gray-100'
-              } ${isCollapsed ? 'justify-center' : ''}`
-            }
-            title={isCollapsed ? 'Settings' : ''}
-          >
-            <Settings className="w-5 h-5" />
-            {!isCollapsed && <span className="ml-3 font-medium">Settings</span>}
-        </NavLink>
+        {/* Only show Settings for admin users */}
+        {user?.role === 'admin' && (
+          <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `flex items-center mt-2 py-2 px-3 rounded-lg transition-colors duration-200 ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-100'
+                } ${isCollapsed ? 'justify-center' : ''}`
+              }
+              title={isCollapsed ? 'Settings' : ''}
+            >
+              <Settings className="w-5 h-5" />
+              {!isCollapsed && <span className="ml-3 font-medium">Settings</span>}
+          </NavLink>
+        )}
         <button
           onClick={logout}
           className={`w-full flex items-center mt-2 py-2 px-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors ${isCollapsed ? 'justify-center' : ''}`}

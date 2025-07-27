@@ -15,7 +15,7 @@ const Login = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'kasir'
+    role: 'cashier'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -83,7 +83,7 @@ const Login = () => {
           email: '',
           password: '',
           confirmPassword: '',
-          role: 'kasir'
+          role: 'cashier'
         });
       } else {
         toast.error(data.error || 'Registration failed');

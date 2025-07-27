@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { SidebarProvider } from './context/SidebarContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import RoleProtectedRoute from './components/RoleProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import POS from './pages/POS';
@@ -34,17 +35,61 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route index element={<POS />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="products" element={<Products />} />
-                <Route path="products/add" element={<AddProductForm />} />
-                <Route path="products/edit/:id" element={<AddProductForm />} />
-                <Route path="categories" element={<Categories />} />
-                <Route path="purchases" element={<Purchases />} />
-                <Route path="customers" element={<Customers />} />
-                <Route path="credit" element={<Credits />} />
-                <Route path="transactions" element={<Transactions />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="settings" element={<Settings />} />
+                <Route path="dashboard" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <Dashboard />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="products" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <Products />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="products/add" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <AddProductForm />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="products/edit/:id" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <AddProductForm />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="categories" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <Categories />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="purchases" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <Purchases />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="customers" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <Customers />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="credit" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <Credits />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="transactions" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <Transactions />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="reports" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <Reports />
+                  </RoleProtectedRoute>
+                } />
+                <Route path="settings" element={
+                  <RoleProtectedRoute allowedRoles={['admin']}>
+                    <Settings />
+                  </RoleProtectedRoute>
+                } />
               </Route>
             </Routes>
             <Toaster position="top-right" />
